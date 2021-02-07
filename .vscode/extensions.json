@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "EditorConfig.EditorConfig",
+    "oderwat.indent-rainbow",
+    "aaron-bond.better-comments",
+    "ms-vscode.powershell-preview",
+    "tylerleonhardt.vscode-pester-test-adapter",
+  ]
+}
