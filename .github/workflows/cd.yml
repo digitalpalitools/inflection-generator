@@ -22,7 +22,7 @@ jobs:
         shell: pwsh
 
   generate-db:
-    name: Generate Inflections db
+    name: Generate inflections.db
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
@@ -38,7 +38,7 @@ jobs:
       - name: .csv -> .sql
         run: |
           ./scripts/Generate-SqliteScripts.ps1
-        continue-on-error: true # TODO: Change it back to false
+        continue-on-error: false
         shell: pwsh
 
       - name: .sql -> .db
