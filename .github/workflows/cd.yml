@@ -1,4 +1,4 @@
-name: Continuous Deployment
+name: Continuous Integration
 
 on:
   push:
@@ -9,18 +9,52 @@ jobs:
     name: PowerShell Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
       - name: Run Pester tests (pwsh)
         run: |
           Write-host $PSVersionTable.PSVersion.Major $PSVersionTable.PSRemotingProtocolVersion.Minor
           Set-PSRepository psgallery -InstallationPolicy trusted
           Install-Module -Name Pester -RequiredVersion 5.0.4 -confirm:$false -Force
           Invoke-Pester -Path ".\scripts" -Output Detailed -CI
+        continue-on-error: false
         shell: pwsh
+
+  generate-db:
+    name: Generate Inflections db
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: xlsx -> csv
+        run: |
+          python ./scripts/xlsx2csv.py 'declensions & conjugations.xlsx' ./build --all
+        continue-on-error: false
+
+      - name: .csv -> .sql
+        run: |
+          ./scripts/Generate-SqliteScripts.ps1
+        continue-on-error: false
+        shell: pwsh
+
+      - name: .sql -> .db
+        run: |
+          echo "" >./build/inflections.db
+          echo "" >./build/inflections.sql
+        continue-on-error: false
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: inflection-data
+          path: ./build/*.*
+
 
   finish:
     name: Finish
-    needs: [ powershell-tests ]
+    needs: [ powershell-tests, generate-db ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-ruby@v1
