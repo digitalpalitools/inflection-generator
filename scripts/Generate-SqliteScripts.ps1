@@ -14,6 +14,7 @@ o a.adj in db
     - short id is valid
     - suffix is not empty
     - get mapping from short id -> suffix
+    - check no spaces or punctuation in cells with inflection data
   o generate .sql
     -
   o generate .db

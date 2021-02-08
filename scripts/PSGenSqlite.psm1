@@ -96,7 +96,7 @@ function Test-InflectionInfo {
   )
 
   Process {
-    $name = $InflectionCsv[$InflectionInfo.SRow]."$($InflectionInfo.SCol)"
+    $name = $InflectionCsv[$InflectionInfo.SRow]."$($InflectionInfo.SCol)".Trim()
     if ($name -cne $InflectionInfo.Name) {
       "Inflection '$($InflectionInfo.Name)' not found at $($InflectionInfo.SCol)$($InflectionInfo.SRow+1)." | New-Error
       return
