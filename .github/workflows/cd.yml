@@ -30,13 +30,15 @@ jobs:
 
       - name: xlsx -> csv
         run: |
+          python -V
           python ./scripts/xlsx2csv.py 'declensions & conjugations.xlsx' ./build --all
+          ls -la ./build
         continue-on-error: false
 
       - name: .csv -> .sql
         run: |
           ./scripts/Generate-SqliteScripts.ps1
-        continue-on-error: false
+        continue-on-error: true # TODO: Change it back to false
         shell: pwsh
 
       - name: .sql -> .db

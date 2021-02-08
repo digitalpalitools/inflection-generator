@@ -25,8 +25,15 @@ o a.adj in db
 
 Import-Module $PSScriptRoot/PSGenSqlite.psm1 -Force
 
-$index = Get-Content -Raw "$PSScriptRoot/../build/index.csv" | Read-Index
-$inflections = Get-Content -Raw "$PSScriptRoot/../build/declensions.csv" | Read-Inflection
+$index = Get-Content -Raw "$PSScriptRoot/../build/index.csv" -Encoding utf8 | Read-Index
+$inflections = Get-Content -Raw "$PSScriptRoot/../build/declensions.csv" -Encoding utf8 | Read-Inflection
+
+Write-Host -ForegroundColor Green "Index file: $(Get-Content "$PSScriptRoot/../build/index.csv" | Select-Object -First 5)"
+Write-Host -ForegroundColor Green "Index: $($index.Length)"
+Write-Host -ForegroundColor Green "Index: $($index | Select-Object -First 5)"
+Write-Host -ForegroundColor Green "Inflections file: $(Get-Content "$PSScriptRoot/../build/declensions.csv" | Select-Object -First 5)"
+Write-Host -ForegroundColor Green "Inflections: $($inflections.Length)"
+Write-Host -ForegroundColor Green "Index: $($inflections | Select-Object -First 5)"
 
 $inflectionInfos =
   $index
