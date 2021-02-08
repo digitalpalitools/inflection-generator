@@ -1,3 +1,19 @@
+function TrimWithNull
+{
+  param (
+    [Parameter(ValueFromPipeline = $true)]
+    $String
+  )
+
+  Process {
+    if ($String) {
+      $String.Trim()
+    } else {
+      $String
+    }
+  }
+}
+
 function New-Error
 {
   param (
@@ -18,6 +34,8 @@ function Read-Index {
 
   Process {
     ConvertFrom-Csv $Csv -Header @("name", "bounds")
+    | Where-Object { $_.name -or $_.bounds }
+    | ForEach-Object { @{ name = $_.name | TrimWithNull; bounds = $_.bounds | TrimWithNull; } }
   }
 }
 
