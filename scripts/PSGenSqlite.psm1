@@ -109,6 +109,11 @@ function Import-InflectionInfos {
 
     $sColIndex = $InflectionCsvColumnIndices.$($sCol)
     $eColIndex = $InflectionCsvColumnIndices.$($eCol)
+    if (($eColIndex -le ($sColIndex + 1)) -or ($eRow -le $sRow)) {
+      "Inflection '$name' location must have start row and col less than end row and col." | New-Error
+      return
+    }
+
     if ((($eColIndex - $sColIndex + 1) % 2) -eq 0) {
       "Inflection '$name' must have even number of columns (grammar and inflection)." | New-Error
       return
@@ -125,7 +130,7 @@ function Import-InflectionInfos {
   }
 }
 
-function Test-InflectionInfo {
+function Import-Inflection {
   param (
     $InflectionCsv,
     [Parameter(ValueFromPipeline = $true)]
@@ -145,6 +150,17 @@ function Test-InflectionInfo {
       return
     }
 
-    $InflectionInfo
+    $inflection = @{ info = $InflectionInfo; entries = @{} }
+    $sCol = $InflectionCsvColumnIndices.$($InflectionInfo.SCol)
+    $eCol = $InflectionCsvColumnIndices.$($InflectionInfo.ECol)
+    for ($i = $InflectionInfo.SRow + 1; $i -le $InflectionInfo.ERow; $i += 1) {
+      for ($j = $sCol + 1; $j -le $eCol; $j += 2) {
+        $inf = $InflectionCsv[$i].$($InflectionCsvColumns[$j])
+        $gra = $InflectionCsv[$i].$($InflectionCsvColumns[$j + 1])
+        $inflection.entries.$($gra) = $inf
+      }
+    }
+
+    $inflection
   }
 }

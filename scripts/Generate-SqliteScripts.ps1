@@ -11,9 +11,9 @@ o a.adj in db
     x bottom-right - 3 corner cells
     v index has same name
     v has even number of columns
+    v get mapping from grammar -> suffix
     - grammar is valid
     - suffix is not empty
-    - get mapping from grammar -> suffix
     - check no spaces or punctuation in cells with inflection data
   o generate .sql
     v dummy sql
@@ -35,7 +35,7 @@ $inflections = Get-Content -Raw "$ioRoot/declensions.csv" -Encoding utf8 | Read-
 $inflectionInfos =
   $index
   | Import-InflectionInfos
-  | Test-InflectionInfo $inflections
+  | Import-Inflection $inflections
 
 $errors1 =
   $inflectionInfos
@@ -51,7 +51,9 @@ if ($errors1) {
 $inflectionInfos
   | Where-Object { -not $_.Error }
   | ForEach-Object {
-    Write-Host -ForegroundColor Green "Loading schema #$($_.Id) '$($($_.Name))' from $($_.SCol)$($($_.SRow)):$($($_.ECol))$($_.ERow) ..."
+    $x = $_.info
+    $c = $_.entries.Count
+    Write-Host -ForegroundColor Green "Loading schema #$($x.Id) ($c) '$($($x.Name))' from $($x.SCol)$($($x.SRow)):$($($x.ECol))$($x.ERow) ..."
   }
 
 
