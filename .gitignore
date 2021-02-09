@@ -74,6 +74,9 @@ Generated\ Files/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
+# Pester
+coverage.xml
+
 # NUnit
 *.VisualState.xml
 TestResult.xml

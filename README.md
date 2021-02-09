@@ -9,13 +9,12 @@ Generate a sqlite db for the inflection schema.
 ## Generate db
 
 - Manual
-  - Export [master workbook](https://docs.google.com/spreadsheets/d/1j6SSGf519bkrPqgMn7PhQ5rv309zGRp5R5-sKBLzY30/edit?usp=sharing) as xlxs
-  - Run
-    ```python xlsx2csv.py 'declensions & conjugations.xlsx' ./csvs --all```
+  - Export xlsx from [master workbook](https://docs.google.com/spreadsheets/d/1j6SSGf519bkrPqgMn7PhQ5rv309zGRp5R5-sKBLzY30/edit?usp=sharing)
   - Commit the above changes
 - Automated in CI
-  - Generate-SqliteScripts.ps1 ../csvs
-  - sqlite3 ./build/inflexctions.sql ./build/dpt-inflexctions.db
+  - ```python ./scriptsxlsx2csv.py 'declensions & conjugations.xlsx' ./csvs --all```
+  - ```./scripts/Generate-SqliteScripts.ps1```
+  - ```cat ./build/inflections.sql | .\bin\win\sqlite3.exe```
 
 > Every CI if successful will publish the .sql and .db as package
 

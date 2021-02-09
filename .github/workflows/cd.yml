@@ -28,7 +28,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: xlsx -> csv
+      - name: .xlsx -> .csv
         run: |
           python -V
           python ./scripts/xlsx2csv.py 'declensions & conjugations.xlsx' ./build --all
@@ -43,8 +43,7 @@ jobs:
 
       - name: .sql -> .db
         run: |
-          echo "" >./build/inflections.db
-          echo "" >./build/inflections.sql
+          cat ./build/inflections.sql | ./bin/linux/sqlite3
         continue-on-error: false
 
       - name: Upload artifacts

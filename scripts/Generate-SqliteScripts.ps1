@@ -26,8 +26,10 @@ o a.adj in db
 
 Import-Module $PSScriptRoot/PSGenSqlite.psm1 -Force
 
-$index = Get-Content -Raw "$PSScriptRoot/../build/index.csv" -Encoding utf8 | Read-Index
-$inflections = Get-Content -Raw "$PSScriptRoot/../build/declensions.csv" -Encoding utf8 | Read-Inflection
+$ioRoot = "$PSScriptRoot/../build"
+
+$index = Get-Content -Raw "$ioRoot/index.csv" -Encoding utf8 | Read-Index
+$inflections = Get-Content -Raw "$ioRoot/declensions.csv" -Encoding utf8 | Read-Inflection
 
 $inflectionInfos =
   $index
@@ -51,3 +53,14 @@ $inflectionInfos
     Write-Host -ForegroundColor Green "Loading schema #$($_.Id) '$($($_.Name))' from $($_.SCol)$($($_.SRow)):$($($_.ECol))$($_.ERow) ..."
   }
 
+
+$sql = @"
+create table tbl1(one varchar(10), two smallint);
+insert into tbl1 values('hello!', 110);
+insert into tbl1 values('goodbye', 120);
+select * from tbl1;
+
+.save $("$ioRoot/inflections.db".Replace("\", "/"))
+"@
+
+$sql | Out-File -Encoding utf8BOM -FilePath "$ioRoot/inflections.sql"
