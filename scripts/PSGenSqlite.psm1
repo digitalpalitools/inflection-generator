@@ -1,3 +1,31 @@
+function CreateInflectionCsvColumns
+{
+  @(
+    @("", ("A".."Z"))
+    | ForEach-Object { $_ }
+    | ForEach-Object {
+      $c1 = $_
+      "A".."Z" | ForEach-Object { $c2 = $_; "$c1$c2" } }
+  )
+}
+
+New-Variable -Name 'InflectionCsvColumns' -Option Constant -Value $(CreateInflectionCsvColumns)
+
+function CreateInflectionCsvColumnIndices
+{
+  $i = 0;
+  $map = @{};
+
+  $InflectionCsvColumns
+  | ForEach-Object {
+    $map.($_) = $i; $i++
+  }
+
+  $map
+}
+
+New-Variable -Name 'InflectionCsvColumnIndices' -Option Constant -Value $(CreateInflectionCsvColumnIndices)
+
 function TrimWithNull
 {
   param (
@@ -45,12 +73,8 @@ function Read-Inflection {
     $Csv
   )
 
-  Begin {
-    $header = @(@("", ("A".."Z")) | ForEach-Object { $_ } | ForEach-Object { $c1 = $_; "A".."Z" | ForEach-Object { $c2 = $_; "$c1$c2" } })
-  }
-
   Process {
-    ConvertFrom-Csv $Csv -Header $header
+    ConvertFrom-Csv $Csv -Header $InflectionCsvColumns
   }
 }
 
@@ -77,13 +101,26 @@ function Import-InflectionInfos {
       return
     }
 
+    $name = $Index.name.Trim()
+    $sRow = [int] ($Matches[2] - 1)
+    $sCol = $Matches[1]
+    $eRow = [int] ($Matches[4] - 1)
+    $eCol = $Matches[3]
+
+    $sColIndex = $InflectionCsvColumnIndices.$($sCol)
+    $eColIndex = $InflectionCsvColumnIndices.$($eCol)
+    if ((($eColIndex - $sColIndex + 1) % 2) -eq 0) {
+      "Inflection '$name' must have even number of columns (grammar and inflection)." | New-Error
+      return
+    }
+
     @{
       Id = $id
-      Name = $Index.name.Trim()
-      SRow = [int] ($Matches[2] - 1)
-      SCol = $Matches[1]
-      ERow = [int] ($Matches[4] - 1)
-      ECol = $Matches[3]
+      Name = $name
+      SRow = $sRow
+      SCol = $sCol
+      ERow = $eRow
+      ECol = $eCol
     }
   }
 }
@@ -96,6 +133,12 @@ function Test-InflectionInfo {
   )
 
   Process {
+    # NOTE: Pass through errors from previous steps.
+    if ($InflectionInfo.Error) {
+      $InflectionInfo
+      return
+    }
+
     $name = $InflectionCsv[$InflectionInfo.SRow]."$($InflectionInfo.SCol)".Trim()
     if ($name -cne $InflectionInfo.Name) {
       "Inflection '$($InflectionInfo.Name)' not found at $($InflectionInfo.SCol)$($InflectionInfo.SRow+1)." | New-Error

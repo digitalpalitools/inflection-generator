@@ -10,15 +10,16 @@ o a.adj in db
   o load schema
     x bottom-right - 3 corner cells
     v index has same name
-    - has even number of columns
-    - short id is valid
+    v has even number of columns
+    - grammar is valid
     - suffix is not empty
-    - get mapping from short id -> suffix
+    - get mapping from grammar -> suffix
     - check no spaces or punctuation in cells with inflection data
   o generate .sql
-    -
+    v dummy sql
+    - final sql
   o generate .db
-    - run sqlite cmd line
+    v run sqlite cmd line
 - expansions table
 - integrate above with CI
 - publish: .csvs, .db, .sql
@@ -63,4 +64,4 @@ select * from tbl1;
 .save $("$ioRoot/inflections.db".Replace("\", "/"))
 "@
 
-$sql | Out-File -Encoding utf8BOM -FilePath "$ioRoot/inflections.sql"
+$sql | Out-File -Encoding utf8 -FilePath "$ioRoot/inflections.sql"
