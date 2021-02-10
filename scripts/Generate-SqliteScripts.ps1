@@ -16,16 +16,16 @@ o a.adj in db
     v grammar has valid parts
     v inflection is not empty
     v unknown pos
-    - invalid number of grammar parts for pos
-    - check no spaces or punctuation in inflection
+    v invalid number of grammar parts for pos
+    v check no spaces or punctuation in inflection
   o generate .sql
     v dummy sql
     - final sql
+    - expansions table
   o generate .db
     v run sqlite cmd line
-- expansions table
-- integrate above with CI
-- publish: .csvs, .db, .sql
+v integrate above with CI
+  - publish: .csvs, .db, .sql to azure storage
 #>
 
 Import-Module $PSScriptRoot/PSGenSqlite.psm1 -Force

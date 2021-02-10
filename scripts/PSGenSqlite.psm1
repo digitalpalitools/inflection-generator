@@ -1,26 +1,28 @@
+New-Variable -Name 'ArrayOf5EmptyStrings' -Option Constant @("", "", "", "", "")
+
 New-Variable -Name 'PosInfo' -Option Constant -Value @{
-  "adj" = 1
-  "aor" = 1
-  "aor irreg" = 1
-  "card" = 1
-  "cond" = 1
-  "fem" = 1
-  "fem irreg" = 1
-  "fut" = 1
-  "imperf" = 1
-  "letter" = 1
-  "masc" = 1
-  "masc pl" = 1
-  "nt" = 1
-  "nt irreg" = 1
-  "ordin" = 1
-  "perf" = 1
-  "pp" = 1
-  "pr" = 1
-  "pron" = 1
-  "prp" = 1
-  "ptp" = 1
-  "root" = 1
+  "adj" = 3
+  "aor" = 3
+  "aor irreg" = 3
+  "card" = 3
+  "cond" = 3
+  "fem" = 3
+  "fem irreg" = 3
+  "fut" = 3
+  "imperf" = 3
+  "letter" = 3
+  "masc" = 3
+  "masc pl" = 3
+  "nt" = 3
+  "nt irreg" = 3
+  "ordin" = 3
+  "perf" = 3
+  "pp" = 3
+  "pr" = 3
+  "pron" = 3
+  "prp" = 3
+  "ptp" = 3
+  "root" = 3
 }
 
 function CreateInflectionCsvColumns {
@@ -211,18 +213,38 @@ function Import-Inflection {
         $inf = $InflectionCsv[$i].$($InflectionCsvColumns[$j]) | TrimWithNull
         $gra = $InflectionCsv[$i].$($InflectionCsvColumns[$j + 1]) | TrimWithNull
         if ($inf) {
-          $inflection.entries.$($gra) = $inf
+          $inflection.entries.$($gra) = @{
+            grammar = if ($gra) { $gra.Split(" ") | Where-Object { $_} } else { @($ArrayOf5EmptyStrings | Select-Object -First $PosInfo[$inflection.info.Pos]) }
+            allInflections = $inf
+            inflections = $inf.Split("`n") | ForEach-Object { $_ | TrimWithNull } | Where-Object { $_}
+          }
         }
       }
     }
 
     $errors = @()
+
     $errors +=
       $inflection.entries.Keys
-      | ForEach-Object { $_.Split(" ") }
+      | ForEach-Object { $inflection.entries[$_].grammar }
       | Where-Object { -not $Abbreviations.ContainsKey($_) }
       | ForEach-Object {
-          "Inflection '$($inflection.info.name)' has invalid grammar '$_'." | New-Error
+          "Inflection '$($inflection.info.name)' has unrecognized grammar '$_'." | New-Error
+      }
+
+    $errors +=
+      $inflection.entries.Keys
+      | Where-Object { $inflection.entries[$_].grammar.Length -ne $PosInfo[$inflection.info.Pos] }
+      | ForEach-Object {
+        "Inflection '$($inflection.info.name)':'$_' was expected to have '$($PosInfo[$inflection.info.Pos])' grammar entries, instead has '$($inflection.entries[$_].grammar.Length)' grammar entries." | New-Error
+      }
+
+    $errors +=
+      $inflection.entries.Keys
+      | ForEach-Object { $inflection.entries[$_].inflections }
+      | Where-Object { $_ -notmatch "^[a|ā|i|ī|u|ū|e|o|k|kh|g|gh|ṅ|c|ch|j|jh|ñ|ṭ|ṭh|ḍ|ḍh|ṇ|t|th|d|dh|n|p|ph|b|bh|m|y|r|l|v|s|h|ḷ|ṃ]+$" }
+      | ForEach-Object {
+        "Inflection '$($inflection.info.name)':'$_' cannot have invalid characters." | New-Error
       }
 
     if ($errors) {

@@ -22,6 +22,7 @@ BeforeAll {
     sg = @{ name = "sg"; description = "singular" }
     pl = @{ name = "pl"; description = "plural" }
     acc = @{ name = "acc"; description = "accusative" }
+    dual = @{ name = "acc"; description = "dual" }
     "" = @{ name = "in comps"; description = "in compounds" }
   }
 }
@@ -70,15 +71,30 @@ a root1,A3:M12
       $i = $ii | Import-Inflection $inflection $Abbreviations
       $i.info | InflectionInfo2String | Should -BeExactly "1, eka card, card, 1, Y, 4, AB"
       $i.entries.Count | Should -Be 5
-      $i.entries."masc nom sg" | Should -BeExactly "eko"
-      $i.entries."masc nom pl" | Should -BeExactly "eke"
-      $i.entries."masc acc sg" | Should -BeExactly "ekaṃ"
-      $i.entries."masc acc pl" | Should -BeExactly "eke"
-      $i.entries."" | Should -BeExactly "a"
+
+      $i.entries."masc nom sg".grammar | Should -BeExactly @("masc", "nom", "sg")
+      $i.entries."masc nom sg".allInflections | Should -BeExactly "eko"
+      $i.entries."masc nom sg".inflections | Should -BeExactly @("eko")
+
+      $i.entries."masc nom pl".grammar | Should -BeExactly @("masc", "nom", "pl")
+      $i.entries."masc nom pl".allInflections | Should -BeExactly "eke"
+      $i.entries."masc nom pl".inflections | Should -BeExactly @("eke")
+
+      $i.entries."masc acc sg".grammar | Should -BeExactly @("masc", "acc", "sg")
+      $i.entries."masc acc sg".allInflections | Should -BeExactly "ekaṃ"
+      $i.entries."masc acc sg".inflections | Should -BeExactly @("ekaṃ")
+
+      $i.entries."masc acc pl".grammar | Should -BeExactly @("masc", "acc", "pl")
+      $i.entries."masc acc pl".allInflections | Should -BeExactly "eke"
+      $i.entries."masc acc pl".inflections | Should -BeExactly @("eke")
+
+      $i.entries."".grammar | Should -BeExactly @("", "", "")
+      $i.entries."".allInflections | Should -BeExactly "a"
+      $i.entries."".inflections | Should -BeExactly @("a")
     }
 
     It "Error if not found at index" {
-      $ii = @{ Id = 1; Name = "x adx"; SRow = 0; SCol = "B"; ERow = 1; ECol = "C" }
+      $ii = @{ Id = 1; Name = "x adx"; Pos = "adx"; SRow = 0; SCol = "B"; ERow = 1; ECol = "C" }
       $inflection = ",`n,x adx" | Read-InflectionsCsv
 
       $i = $ii | Import-Inflection $inflection $Abbreviations
@@ -95,7 +111,7 @@ a root1,A3:M12
     }
 
     It "Grammar has 1 error" {
-      $ii = @{ Id = 1; Name = "eka card"; SRow = 0; SCol = "A"; ERow = 2; ECol = "D" }
+      $ii = @{ Id = 1; Name = "eka card"; Pos = "card"; SRow = 0; SCol = "A"; ERow = 2; ECol = "D" }
       $inflection = @'
 eka card,masc sg,,masc pl,
 nom,eko,masc nom sg,eke,masc nom plx
@@ -104,11 +120,11 @@ acc,ekaṃ,masc acc sg,eke,masc acc pl
 
       $i = $ii | Import-Inflection $inflection $Abbreviations | Sort-Object
       $i.info | Should -Be $null
-      $i.error | Should -BeExactly "Inflection 'eka card' has invalid grammar 'plx'."
+      $i.error | Should -BeExactly "Inflection 'eka card' has unrecognized grammar 'plx'."
     }
 
     It "Grammar has multiple errors" {
-      $ii = @{ Id = 1; Name = "eka card"; SRow = 0; SCol = "A"; ERow = 2; ECol = "D" }
+      $ii = @{ Id = 1; Name = "eka card"; Pos = "card"; SRow = 0; SCol = "A"; ERow = 2; ECol = "D" }
       $inflection = @'
 eka card,masc sg,,masc pl,
 nom,eko,masc nom sg,eke,masc nom plx
@@ -117,9 +133,39 @@ acc,ekaṃ,1masc acc sg,eke,masc acc pl
 
       $i = $ii | Import-Inflection $inflection $Abbreviations | Sort-Object -Property error
       $i[0].info | Should -Be $null
-      $i[0].error | Should -BeExactly "Inflection 'eka card' has invalid grammar '1masc'."
+      $i[0].error | Should -BeExactly "Inflection 'eka card' has unrecognized grammar '1masc'."
       $i[1].info | Should -Be $null
-      $i[1].error | Should -BeExactly "Inflection 'eka card' has invalid grammar 'plx'."
+      $i[1].error | Should -BeExactly "Inflection 'eka card' has unrecognized grammar 'plx'."
     }
+
+    It "Grammar does not have expected entries" {
+      $ii = @{ Id = 1; Name = "eka adj"; Pos = "adj"; SRow = 0; SCol = "A"; ERow = 2; ECol = "D" }
+      $inflection = @'
+eka adj,masc sg,,masc pl,
+nom,eko,masc sg,eke,masc nom pl
+acc,ekaṃ,masc acc sg,eke,masc acc pl dual
+'@ | Read-InflectionsCsv
+
+      $i = $ii | Import-Inflection $inflection $Abbreviations | Sort-Object -Property error
+      $i[0].info | Should -Be $null
+      $i[0].error | Should -BeExactly "Inflection 'eka adj':'masc acc pl dual' was expected to have '3' grammar entries, instead has '4' grammar entries."
+      $i[1].info | Should -Be $null
+      $i[1].error | Should -BeExactly "Inflection 'eka adj':'masc sg' was expected to have '3' grammar entries, instead has '2' grammar entries."
+    }
+  }
+
+  It "Inflection does not have non pāli characters" {
+    $ii = @{ Id = 1; Name = "eka adj"; Pos = "adj"; SRow = 0; SCol = "A"; ERow = 2; ECol = "D" }
+    $inflection = @'
+eka adj,masc sg,,masc pl,
+nom,ek1o,masc nom sg,eke,masc nom pl
+acc,ekaṃ,masc acc sg,~eke,masc acc pl
+'@ | Read-InflectionsCsv
+
+    $i = $ii | Import-Inflection $inflection $Abbreviations | Sort-Object -Property error
+    $i[0].info | Should -Be $null
+    $i[0].error | Should -BeExactly "Inflection 'eka adj':'~eke' cannot have invalid characters."
+    $i[1].info | Should -Be $null
+    $i[1].error | Should -BeExactly "Inflection 'eka adj':'ek1o' cannot have invalid characters."
   }
 }
