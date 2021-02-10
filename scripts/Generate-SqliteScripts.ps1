@@ -9,12 +9,15 @@
 o a.adj in db
   o load schema
     x bottom-right - 3 corner cells
+    x name 2nd part is a valid pos
     v index has same name
     v has even number of columns
     v get mapping from grammar -> suffix
-    - grammar is valid
-    - suffix is not empty
-    - check no spaces or punctuation in cells with inflection data
+    v grammar has valid parts
+    v inflection is not empty
+    v unknown pos
+    - invalid number of grammar parts for pos
+    - check no spaces or punctuation in inflection
   o generate .sql
     v dummy sql
     - final sql
@@ -29,27 +32,28 @@ Import-Module $PSScriptRoot/PSGenSqlite.psm1 -Force
 
 $ioRoot = "$PSScriptRoot/../build"
 
-$index = Get-Content -Raw "$ioRoot/index.csv" -Encoding utf8 | Read-Index
-$inflections = Get-Content -Raw "$ioRoot/declensions.csv" -Encoding utf8 | Read-Inflection
+$index = Get-Content -Raw "$ioRoot/index.csv" -Encoding utf8 | Read-IndexCsv
+$inflections = Get-Content -Raw "$ioRoot/declensions.csv" -Encoding utf8 | Read-InflectionsCsv
+$abbreviations = Get-Content -Raw "$ioRoot/abbreviations.csv" -Encoding utf8 | Read-AbbreviationsCsv
 
 $inflectionInfos =
   $index
   | Import-InflectionInfos
-  | Import-Inflection $inflections
+  | Import-Inflection $inflections $Abbreviations
 
 $errors1 =
   $inflectionInfos
-    | Where-Object { $_.Error }
+    | Where-Object { $_.error }
 
 $errors1
-    | ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_.Error)" }
+    | ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_.error)" }
 
 if ($errors1) {
   throw "there were one or more errors, see above for details"
 }
 
 $inflectionInfos
-  | Where-Object { -not $_.Error }
+  | Where-Object { -not $_.error }
   | ForEach-Object {
     $x = $_.info
     $c = $_.entries.Count
@@ -67,3 +71,9 @@ select * from tbl1;
 "@
 
 $sql | Out-File -Encoding utf8 -FilePath "$ioRoot/inflections.sql"
+
+$abbreviations
+$abbreviations.masc
+$abbreviations.nom
+$abbreviations.sg
+$abbreviations.pl

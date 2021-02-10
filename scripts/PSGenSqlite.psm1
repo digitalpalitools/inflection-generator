@@ -1,5 +1,29 @@
-function CreateInflectionCsvColumns
-{
+New-Variable -Name 'PosInfo' -Option Constant -Value @{
+  "adj" = 1
+  "aor" = 1
+  "aor irreg" = 1
+  "card" = 1
+  "cond" = 1
+  "fem" = 1
+  "fem irreg" = 1
+  "fut" = 1
+  "imperf" = 1
+  "letter" = 1
+  "masc" = 1
+  "masc pl" = 1
+  "nt" = 1
+  "nt irreg" = 1
+  "ordin" = 1
+  "perf" = 1
+  "pp" = 1
+  "pr" = 1
+  "pron" = 1
+  "prp" = 1
+  "ptp" = 1
+  "root" = 1
+}
+
+function CreateInflectionCsvColumns {
   @(
     @("", ("A".."Z"))
     | ForEach-Object { $_ }
@@ -11,8 +35,7 @@ function CreateInflectionCsvColumns
 
 New-Variable -Name 'InflectionCsvColumns' -Option Constant -Value $(CreateInflectionCsvColumns)
 
-function CreateInflectionCsvColumnIndices
-{
+function CreateInflectionCsvColumnIndices {
   $i = 0;
   $map = @{};
 
@@ -26,8 +49,7 @@ function CreateInflectionCsvColumnIndices
 
 New-Variable -Name 'InflectionCsvColumnIndices' -Option Constant -Value $(CreateInflectionCsvColumnIndices)
 
-function TrimWithNull
-{
+function TrimWithNull {
   param (
     [Parameter(ValueFromPipeline = $true)]
     $String
@@ -42,19 +64,18 @@ function TrimWithNull
   }
 }
 
-function New-Error
-{
+function New-Error {
   param (
     [Parameter(ValueFromPipeline = $true)]
     $Error
   )
 
   Process {
-    @{ Error = $Error }
+    @{ error = $Error }
   }
 }
 
-function Read-Index {
+function Read-IndexCsv {
   param (
     [Parameter(ValueFromPipeline = $true)]
     $Csv
@@ -67,7 +88,31 @@ function Read-Index {
   }
 }
 
-function Read-Inflection {
+function Read-AbbreviationsCsv {
+  param (
+    [Parameter(ValueFromPipeline = $true)]
+    $Csv
+  )
+
+  Process {
+    $abbreviations = @{}
+
+    ConvertFrom-Csv $Csv -Header @("name", "description")
+    | Where-Object { $_.name -and $_.description }
+    | ForEach-Object {
+      $name = $_.name | TrimWithNull
+      if ($name -ieq "in comps") {
+        $name = ""
+      }
+
+      $abbreviations.$name = @{ name = $name; description = $_.description | TrimWithNull; }
+    }
+
+    $abbreviations
+  }
+}
+
+function Read-InflectionsCsv {
   param (
     [Parameter(ValueFromPipeline = $true)]
     $Csv
@@ -102,6 +147,12 @@ function Import-InflectionInfos {
     }
 
     $name = $Index.name.Trim()
+    $pos = $name.Trim().Split(" ")[1..10] -join " "
+    if (-not $PosInfo.ContainsKey($pos)) {
+      "Inflection '$name' is for an unknown part of speech." | New-Error
+      return
+    }
+
     $sRow = [int] ($Matches[2] - 1)
     $sCol = $Matches[1]
     $eRow = [int] ($Matches[4] - 1)
@@ -121,6 +172,7 @@ function Import-InflectionInfos {
 
     @{
       Id = $id
+      Pos = $pos
       Name = $name
       SRow = $sRow
       SCol = $sCol
@@ -133,13 +185,14 @@ function Import-InflectionInfos {
 function Import-Inflection {
   param (
     $InflectionCsv,
+    $Abbreviations,
     [Parameter(ValueFromPipeline = $true)]
     $InflectionInfo
   )
 
   Process {
     # NOTE: Pass through errors from previous steps.
-    if ($InflectionInfo.Error) {
+    if ($InflectionInfo.error) {
       $InflectionInfo
       return
     }
@@ -155,10 +208,26 @@ function Import-Inflection {
     $eCol = $InflectionCsvColumnIndices.$($InflectionInfo.ECol)
     for ($i = $InflectionInfo.SRow + 1; $i -le $InflectionInfo.ERow; $i += 1) {
       for ($j = $sCol + 1; $j -le $eCol; $j += 2) {
-        $inf = $InflectionCsv[$i].$($InflectionCsvColumns[$j])
-        $gra = $InflectionCsv[$i].$($InflectionCsvColumns[$j + 1])
-        $inflection.entries.$($gra) = $inf
+        $inf = $InflectionCsv[$i].$($InflectionCsvColumns[$j]) | TrimWithNull
+        $gra = $InflectionCsv[$i].$($InflectionCsvColumns[$j + 1]) | TrimWithNull
+        if ($inf) {
+          $inflection.entries.$($gra) = $inf
+        }
       }
+    }
+
+    $errors = @()
+    $errors +=
+      $inflection.entries.Keys
+      | ForEach-Object { $_.Split(" ") }
+      | Where-Object { -not $Abbreviations.ContainsKey($_) }
+      | ForEach-Object {
+          "Inflection '$($inflection.info.name)' has invalid grammar '$_'." | New-Error
+      }
+
+    if ($errors) {
+      $errors
+      return
     }
 
     $inflection
