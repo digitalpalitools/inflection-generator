@@ -3,12 +3,12 @@ New-Variable -Name 'ArrayOf5EmptyStrings' -Option Constant @("", "", "", "", "")
 New-Variable -Name 'PosInfo' -Option Constant -Value @{
   "adj" = 3
   "aor" = 4
-  "aor irreg" = 3
+  "aor irreg" = 4
   "card" = 3
-  "cond" = 3
+  "cond" = 4
   "fem" = 3
   "fem irreg" = 3
-  "fut" = 3
+  "fut" = 4
   "imperf" = 4
   "letter" = 3
   "masc" = 3
@@ -16,15 +16,15 @@ New-Variable -Name 'PosInfo' -Option Constant -Value @{
   "nt" = 3
   "nt irreg" = 3
   "ordin" = 3
-  "perf" = 3
+  "perf" = 4
   "pp" = 3
   "pr" = 4
   "pron" = 3
   "prp" = 3
   "ptp" = 3
   "root" = 3
-  "imp" = 3
-  "opt" = 3
+  "imp" = 4
+  "opt" = 4
 }
 
 function CreateInflectionCsvColumns {
