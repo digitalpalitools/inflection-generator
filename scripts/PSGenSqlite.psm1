@@ -187,13 +187,13 @@ function Import-InflectionInfos {
     }
 
     @{
-      Id = $id
-      Pos = $pos
-      Name = $name
-      SRow = $sRow
-      SCol = $sCol
-      ERow = $eRow
-      ECol = $eCol
+      id = $id
+      pos = $pos
+      name = $name
+      srow = $sRow
+      scol = $sCol
+      erow = $eRow
+      ecol = $eCol
     }
   }
 }
@@ -222,7 +222,14 @@ function Import-Inflection {
     $inflection = @{ info = $InflectionInfo; entries = @{} }
     $sCol = $InflectionCsvColumnIndices.$($InflectionInfo.SCol)
     $eCol = $InflectionCsvColumnIndices.$($InflectionInfo.ECol)
-    for ($i = $InflectionInfo.SRow + 1; $i -le $InflectionInfo.ERow; $i += 1) {
+
+    $rowOffset = 1
+    if ($VerbCategories.ContainsKey($inflection.info.pos)) {
+      # NOTE: Verbs have the active / reflexive overarching row
+      $rowOffset = 2
+    }
+
+    for ($i = $InflectionInfo.SRow + $rowOffset; $i -le $InflectionInfo.ERow; $i += 1) {
       for ($j = $sCol + 1; $j -le $eCol; $j += 2) {
         $inf = $InflectionCsv[$i].$($InflectionCsvColumns[$j]) | TrimWithNull
         $gra = $InflectionCsv[$i].$($InflectionCsvColumns[$j + 1]) | TrimWithNull

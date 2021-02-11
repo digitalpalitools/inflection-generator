@@ -183,16 +183,16 @@ acc,ekaṃ,masc acc sg,~eke,masc acc pl
   }
 
   It "Expand active verb category" {
-    $ii = @{ Id = 1; Name = "ati pr"; Pos = "pr"; SRow = 0; SCol = "A"; ERow = 2; ECol = "H" }
+    $ii = @{ Id = 1; Name = "ati pr"; Pos = "pr"; SRow = 0; SCol = "A"; ERow = 4; ECol = "H" }
     $inflection = @"
-ati pr,sg,,pl,,sg,,pl,
+ati pr,active,,,,reflexive,,,
+,sg,,pl,,sg,,pl,
 pr 3rd,ati,pr 3rd sg,anti,pr 3rd pl,ate,reflx pr 3rd sg,ante,reflx pr 3rd pl
 pr 2nd,asi,pr 2nd sg,atha,pr 2nd pl,ase,reflx pr 2nd sg,avhe,reflx pr 2nd pl
 "@ | Read-InflectionsCsv
 
     $i = $ii | Import-Inflection $inflection $Abbreviations
-    Write-Host -ForegroundColor Yellow ">>>> $($i.error)"
-    $i.info | InflectionInfo2String | Should -BeExactly "1, ati pr, pr, 0, A, 2, H"
+    $i.info | InflectionInfo2String | Should -BeExactly "1, ati pr, pr, 0, A, 4, H"
     $i.entries.Count | Should -Be 8
 
     $i.entries."pr 3rd sg".grammar | Should -BeExactly @("act", "pr", "3rd", "sg")

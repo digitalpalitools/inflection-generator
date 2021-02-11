@@ -43,10 +43,10 @@ $inflectionInfos =
 
 $errors1 =
   $inflectionInfos
-    | Where-Object { $_.error }
+  | Where-Object { $_.error }
 
 $errors1
-    | ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_.error)" }
+| ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_.error)" }
 
 if ($errors1) {
   throw "there were one or more errors, see above for details"
@@ -70,9 +70,3 @@ select * from tbl1;
 "@
 
 $sql | Out-File -Encoding utf8 -FilePath "$ioRoot/inflections.sql"
-
-$abbreviations
-$abbreviations.masc
-$abbreviations.nom
-$abbreviations.sg
-$abbreviations.pl

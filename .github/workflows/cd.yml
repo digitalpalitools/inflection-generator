@@ -28,6 +28,12 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
+      - name: Validate stems
+        run: |
+          ./scripts/Validate-Stems.ps1
+        continue-on-error: false
+        shell: pwsh
+
       - name: .xlsx -> .csv
         run: |
           python -V
@@ -46,12 +52,25 @@ jobs:
           cat ./build/inflections.sql | ./bin/linux/sqlite3
         continue-on-error: false
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+      - name: Azure Login
+        uses: azure/login@v1
         with:
-          name: inflection-data
-          path: ./build/*.*
+          creds: ${{ secrets.AZURE_CREDENTIALS_KSAPPLICATIONS_STORAGE }}
 
+      - name: Deploy
+        uses: azure/CLI@v1
+        with:
+          azcliversion: 2.0.72
+          inlineScript: |
+              az storage blob upload-batch --account-name ksapplications -d '$web\inflections' -s ./build
+
+      - name: Set cache-control
+        run: |
+              az storage blob upload --account-name ksapplications --container-name '$web' --name 'inflections/inflections.db' --file ./build/inflections.db --content-cache-control 'no-store max-age=0'
+
+      - name: Azure Logout
+        run: |
+              az logout
 
   finish:
     name: Finish
