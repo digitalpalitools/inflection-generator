@@ -28,18 +28,18 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
 
-      - name: Validate stems
-        run: |
-          ./scripts/Validate-Stems.ps1
-        continue-on-error: false
-        shell: pwsh
-
       - name: .xlsx -> .csv
         run: |
           python -V
           python ./scripts/xlsx2csv.py 'declensions & conjugations.xlsx' ./build --all
           ls -la ./build
         continue-on-error: false
+
+      - name: Validate stems
+        run: |
+          ./scripts/Validate-Stems.ps1
+        continue-on-error: true
+        shell: pwsh
 
       - name: .csv -> .sql
         run: |
