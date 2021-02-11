@@ -25,6 +25,18 @@ New-Variable -Name 'PosInfo' -Option Constant -Value @{
   "root" = 3
   "imp" = 4
   "opt" = 4
+  "gram" = 3
+}
+
+New-Variable -Name 'VerbCategories' -Option Constant -Value @{
+  pr = 1
+  fut = 1
+  aor = 1
+  opt = 1
+  imp = 1
+  cond = 1
+  imperf = 1
+  perf = 1
 }
 
 function CreateInflectionCsvColumns {
@@ -216,9 +228,17 @@ function Import-Inflection {
         $gra = $InflectionCsv[$i].$($InflectionCsvColumns[$j + 1]) | TrimWithNull
         if ($inf) {
           $inflection.entries.$($gra) = @{
-            grammar = if ($gra) { $gra.Split(" ") | Where-Object { $_} } else { @($ArrayOf5EmptyStrings | Select-Object -First $PosInfo[$inflection.info.Pos]) }
+            grammar = @($ArrayOf5EmptyStrings | Select-Object -First $PosInfo[$inflection.info.Pos]) # in comps
             allInflections = $inf
             inflections = $inf.Split("`n") | ForEach-Object { $_ | TrimWithNull } | Where-Object { $_}
+          }
+
+          if ($gra) {
+            $inflection.entries.$($gra).grammar = $gra.Split(" ") | Where-Object { $_}
+          }
+
+          if ($VerbCategories.ContainsKey($inflection.entries.$($gra).grammar[0])){
+            $inflection.entries.$($gra).grammar = @("act") + $inflection.entries.$($gra).grammar
           }
         }
       }
@@ -244,7 +264,9 @@ function Import-Inflection {
     $errors +=
       $inflection.entries.Keys
       | ForEach-Object { $inflection.entries[$_].inflections }
-      | Where-Object { $_ -notmatch "^[a|ā|i|ī|u|ū|e|o|k|kh|g|gh|ṅ|c|ch|j|jh|ñ|ṭ|ṭh|ḍ|ḍh|ṇ|t|th|d|dh|n|p|ph|b|bh|m|y|r|l|v|s|h|ḷ|ṃ]+$" }
+      | Where-Object {
+        ($_ -notmatch "^[a|ā|i|ī|u|ū|e|o|k|kh|g|gh|ṅ|c|ch|j|jh|ñ|ṭ|ṭh|ḍ|ḍh|ṇ|t|th|d|dh|n|p|ph|b|bh|m|y|r|l|v|s|h|ḷ|ṃ]+$")
+      }
       | ForEach-Object {
         "Inflection '$($inflection.info.name)':'$_' cannot have invalid characters." | New-Error
       }

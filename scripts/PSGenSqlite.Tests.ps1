@@ -23,6 +23,19 @@ BeforeAll {
     pl = @{ name = "pl"; description = "plural" }
     acc = @{ name = "acc"; description = "accusative" }
     dual = @{ name = "acc"; description = "dual" }
+    act = @{ name = "act"; description = "active" }
+    reflx = @{ name = "reflx"; description = "reflexive" }
+    "1st" = @{ name = "1st"; description = "1st person" }
+    "2nd" = @{ name = "2nd"; description = "2nd person" }
+    "3rd" = @{ name = "3rd"; description = "3rd person" }
+    pr = @{ name = "pr"; description = "present" }
+    fut = @{ name = "fut"; description = "future" }
+    aor = @{ name = "aor"; description = "aorist" }
+    opt = @{ name = "opt"; description = "optative" }
+    imp = @{ name = "imp"; description = "imperative" }
+    cond = @{ name = "cond"; description = "conditional" }
+    imperf = @{ name = "imperf"; description = "imperfect" }
+    perf = @{ name = "perf"; description = "perfect" }
     "" = @{ name = "in comps"; description = "in compounds" }
   }
 }
@@ -158,7 +171,7 @@ acc,ekaṃ,masc acc sg,eke,masc acc pl dual
     $ii = @{ Id = 1; Name = "eka adj"; Pos = "adj"; SRow = 0; SCol = "A"; ERow = 2; ECol = "D" }
     $inflection = @'
 eka adj,masc sg,,masc pl,
-nom,ek1o,masc nom sg,eke,masc nom pl
+nom,ek7o,masc nom sg,eke,masc nom pl
 acc,ekaṃ,masc acc sg,~eke,masc acc pl
 '@ | Read-InflectionsCsv
 
@@ -166,6 +179,28 @@ acc,ekaṃ,masc acc sg,~eke,masc acc pl
     $i[0].info | Should -Be $null
     $i[0].error | Should -BeExactly "Inflection 'eka adj':'~eke' cannot have invalid characters."
     $i[1].info | Should -Be $null
-    $i[1].error | Should -BeExactly "Inflection 'eka adj':'ek1o' cannot have invalid characters."
+    $i[1].error | Should -BeExactly "Inflection 'eka adj':'ek7o' cannot have invalid characters."
+  }
+
+  It "Expand active verb category" {
+    $ii = @{ Id = 1; Name = "ati pr"; Pos = "pr"; SRow = 0; SCol = "A"; ERow = 2; ECol = "H" }
+    $inflection = @"
+ati pr,sg,,pl,,sg,,pl,
+pr 3rd,ati,pr 3rd sg,anti,pr 3rd pl,ate,reflx pr 3rd sg,ante,reflx pr 3rd pl
+pr 2nd,asi,pr 2nd sg,atha,pr 2nd pl,ase,reflx pr 2nd sg,avhe,reflx pr 2nd pl
+"@ | Read-InflectionsCsv
+
+    $i = $ii | Import-Inflection $inflection $Abbreviations
+    Write-Host -ForegroundColor Yellow ">>>> $($i.error)"
+    $i.info | InflectionInfo2String | Should -BeExactly "1, ati pr, pr, 0, A, 2, H"
+    $i.entries.Count | Should -Be 8
+
+    $i.entries."pr 3rd sg".grammar | Should -BeExactly @("act", "pr", "3rd", "sg")
+    $i.entries."pr 3rd sg".allInflections | Should -BeExactly "ati"
+    $i.entries."pr 3rd sg".inflections | Should -BeExactly @("ati")
+
+    $i.entries."reflx pr 3rd pl".grammar | Should -BeExactly @("reflx", "pr", "3rd", "pl")
+    $i.entries."reflx pr 3rd pl".allInflections | Should -BeExactly "ante"
+    $i.entries."reflx pr 3rd pl".inflections | Should -BeExactly @("ante")
   }
 }

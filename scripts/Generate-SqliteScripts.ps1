@@ -60,7 +60,6 @@ $inflectionInfos
     Write-Host -ForegroundColor Green "Loading schema #$($x.Id) ($c) '$($($x.Name))' from $($x.SCol)$($($x.SRow)):$($($x.ECol))$($x.ERow) ..."
   }
 
-
 $sql = @"
 create table tbl1(one varchar(10), two smallint);
 insert into tbl1 values('hello!', 110);
