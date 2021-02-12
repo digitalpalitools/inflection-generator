@@ -15,4 +15,6 @@ $unknownPatterns
 
 if ($unknownPatterns) {
   throw "there were one or more stems that dont have a corresponding inflection. see above errors for more details."
+} else {
+  Write-Host -ForegroundColor Green "Stems validation completed successfully."
 }

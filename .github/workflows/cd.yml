@@ -38,7 +38,7 @@ jobs:
       - name: Validate stems
         run: |
           ./scripts/Validate-Stems.ps1
-        continue-on-error: true
+        continue-on-error: false
         shell: pwsh
 
       - name: .csv -> .sql
