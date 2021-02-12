@@ -1,6 +1,6 @@
-New-Variable -Name 'ArrayOf5EmptyStrings' -Option Constant @("", "", "", "", "")
+New-Variable -Name 'ArrayOf5EmptyStrings' -Option ReadOnly @("", "", "", "", "")
 
-New-Variable -Name 'PosInfo' -Option Constant -Value @{
+New-Variable -Name 'PosInfo' -Option ReadOnly -Scope 1 -Value @{
   "adj" = 3
   "aor" = 4
   "aor irreg" = 4
@@ -28,7 +28,7 @@ New-Variable -Name 'PosInfo' -Option Constant -Value @{
   "gram" = 3
 }
 
-New-Variable -Name 'VerbCategories' -Option Constant -Value @{
+New-Variable -Name 'VerbCategories' -Option ReadOnly -Scope 1 -Value @{
   pr = 1
   fut = 1
   aor = 1
