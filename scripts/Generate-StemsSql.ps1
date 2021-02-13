@@ -126,7 +126,7 @@ $stems | ForEach-Object { "  ('$($_.pāli1)', '$($_.stem)', '$($_.pattern)')," }
 
 $stems | Out-SqlForStem
 
-"  ('$endRecordMarker', 'ā', '')" | Out-Sql
+"  ('$endRecordMarker', 'acca', '')" | Out-Sql
 ";" | Out-Sql
 "DELETE FROM all_words WHERE pāli1 = '$endRecordMarker';" | Out-Sql
 "" | Out-Sql

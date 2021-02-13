@@ -66,19 +66,19 @@ function Out-SqlForInflectionForVerbs {
   Process {
     @"
 CREATE TABLE $TableName (
-  actrefxl TEXT NOT NULL,
+  actreflx TEXT NOT NULL,
   tense TEXT NOT NULL,
   person TEXT NOT NULL,
   number TEXT NOT NULL,
   inflections TEXT NOT NULL,
-  PRIMARY KEY(actrefxl, tense, person, number),
-  FOREIGN KEY (actrefxl) REFERENCES _abbreviations (name),
+  PRIMARY KEY(actreflx, tense, person, number),
+  FOREIGN KEY (actreflx) REFERENCES _abbreviations (name),
   FOREIGN KEY (tense) REFERENCES _abbreviations (name),
   FOREIGN KEY (person) REFERENCES _abbreviations (name),
   FOREIGN KEY (number) REFERENCES _abbreviations (name)
 );
 "@ | Out-Sql
-    "INSERT INTO $TableName (actrefxl, tense, person, number, inflections)" | Out-Sql
+    "INSERT INTO $TableName (actreflx, tense, person, number, inflections)" | Out-Sql
     "VALUES" | Out-Sql
     ($Entries.Keys | ForEach-Object {
       "  ('$($Entries.$_.grammar[0])', '$($Entries.$_.grammar[1])', '$($Entries.$_.grammar[2])', '$($Entries.$_.grammar[3])', '$($Entries.$_.inflections -join ',')')"
