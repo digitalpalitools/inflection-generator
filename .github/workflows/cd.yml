@@ -22,7 +22,7 @@ jobs:
         shell: pwsh
 
   generate-db:
-    name: Generate inflections.db
+    name: Generate dbs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources

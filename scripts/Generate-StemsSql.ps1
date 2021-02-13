@@ -9,7 +9,7 @@ $ioRoot = "$PSScriptRoot/../build"
 $index = Get-Content -Raw "$ioRoot/index.csv" -Encoding utf8 | Read-IndexCsv
 $inflections = Get-Content -Raw "$ioRoot/declensions.csv" -Encoding utf8 | Read-InflectionsCsv
 $abbreviations = Get-Content -Raw "$ioRoot/abbreviations.csv" -Encoding utf8 | Read-AbbreviationsCsv
-$stems = Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8 | ConvertFrom-Csv | Select-Object -Skip 0 -First 1000000
+$stems = Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8 | ConvertFrom-Csv | Select-Object -Skip 0 -First 200
 
 $indexPatternMap = $index | Group-Object -Property name -AsHashTable
 $unknownPatterns =
@@ -126,7 +126,7 @@ $stems | ForEach-Object { "  ('$($_.pāli1)', '$($_.stem)', '$($_.pattern)')," }
 
 $stems | Out-SqlForStem
 
-"  ('$endRecordMarker', 'acca', '')" | Out-Sql
+"  ('$endRecordMarker', 'ā', '')" | Out-Sql
 ";" | Out-Sql
 "DELETE FROM all_words WHERE pāli1 = '$endRecordMarker';" | Out-Sql
 "" | Out-Sql
