@@ -12,6 +12,7 @@ $abbreviations = Get-Content -Raw "$ioRoot/abbreviations.csv" -Encoding utf8 | R
 $stems =
   Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8
   | ConvertFrom-Csv
+  | Sort-Object -Property Pāli1
   #| Group-Object -Property Pāli1
   #| ForEach-Object { $_.Group[0] }
   #| Where-Object { $_.stem -ine "ind" }
@@ -28,9 +29,16 @@ $unknownPatterns
 
 if ($unknownPatterns) {
   throw "there were one or more stems that dont have a corresponding inflection. see above errors for more details."
-} else {
-  Write-Host -ForegroundColor Green "Stems validation completed successfully."
 }
+
+$duplicateStemRecords = $stems | Group-Object -Property Pāli1 | Where-Object { $_.Count -ne 1 }
+if ($duplicateStemRecords) {
+  Write-Host "Duplicate records found"
+  $duplicateStemRecords | ForEach-Object { Write-Host "... $($_.Name), $($_.Count)" }
+  throw "there are duplicate records in the stems sheet. see above for more info."
+}
+
+Write-Host -ForegroundColor Green "Stems validation completed successfully."
 
 $inflectionInfoMap =
   $index
