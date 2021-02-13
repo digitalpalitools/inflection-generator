@@ -9,7 +9,13 @@ $ioRoot = "$PSScriptRoot/../build"
 $index = Get-Content -Raw "$ioRoot/index.csv" -Encoding utf8 | Read-IndexCsv
 $inflections = Get-Content -Raw "$ioRoot/declensions.csv" -Encoding utf8 | Read-InflectionsCsv
 $abbreviations = Get-Content -Raw "$ioRoot/abbreviations.csv" -Encoding utf8 | Read-AbbreviationsCsv
-$stems = Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8 | ConvertFrom-Csv | Select-Object -Skip 0 -First 200
+$stems =
+  Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8
+  | ConvertFrom-Csv
+  | Group-Object -Property Pāli1
+  | ForEach-Object { $_.Group[0] }
+  #| Select-Object -Skip 0 -First 200
+  | Where-Object { $_.stem -ieq "ind" }
 
 $indexPatternMap = $index | Group-Object -Property name -AsHashTable
 $unknownPatterns =
@@ -46,29 +52,41 @@ function Out-Sql {
 
 function Out-SqlForIrregularStem {
   param (
-    $StemRecord
+    $printStatus,
+    $pāli1,
+    $pattern
   )
 
-  Write-Host -ForegroundColor DarkMagenta "[irregular]" -NoNewline
+  if ($printStatus) {
+    Write-Host -ForegroundColor DarkMagenta "[irregular]" -NoNewline
+  }
 }
 
 function Out-SqlForIndeclinableStem {
   param (
-    $StemRecord
+    $printStatus,
+    $pāli1
   )
 
-  Write-Host -ForegroundColor DarkYellow "[indeclinable]" -NoNewline
+  if ($printStatus) {
+    Write-Host -ForegroundColor DarkYellow "[indeclinable]" -NoNewline
+  }
 
-  $word = $StemRecord.pāli1 -replace "[ ]*\d*$","" | TrimWithNull
-  "  ('$word', '$($StemRecord.pāli1)', 'ind')," | Out-Sql
+  $word = $pāli1 -replace "[ ]*\d*$","" | TrimWithNull
+  "  ('$word', '$($pāli1)', 'ind')," | Out-Sql
 }
 
 function Out-SqlForDeclinableStem {
   param (
-    $StemRecord
+    $printStatus,
+    $pāli1,
+    $stem,
+    $pattern
   )
 
-  Write-Host -ForegroundColor DarkBlue "[declinable]" -NoNewline
+  if ($printStatus) {
+    Write-Host -ForegroundColor Blue "[declinable]" -NoNewline
+  }
 }
 
 function Out-SqlForStem {
@@ -77,20 +95,31 @@ function Out-SqlForStem {
     $StemRecord
   )
 
-  Process {
-    $pāli1 = $StemRecord.pāli1
-    $stem = $StemRecord.stem
-    Write-Host -ForegroundColor Green "Writing sql '$pāli1' " -NoNewline
+  Begin {
+    $count = 0
+  }
 
-    if ($stem -eq "*") {
-      Out-SqlForIrregularStem $StemRecord
-    } elseif ($stem -eq "ind") {
-      Out-SqlForIndeclinableStem $StemRecord
-    } else {
-      Out-SqlForDeclinableStem $StemRecord
+  Process {
+    $pāli1 = $StemRecord.pāli1 | TrimWithNull
+    $stem = $StemRecord.stem | TrimWithNull
+    $printStatus = $count % 100 -eq 0
+    if ($printStatus) {
+      Write-Host -ForegroundColor Green "[$count] Writing sql '$pāli1' " -NoNewline
     }
 
-    Write-Host -ForegroundColor Green " ..."
+    if ($stem -eq "*") {
+      Out-SqlForIrregularStem $printStatus $pāli1 $pattern
+    } elseif ($stem -eq "ind") {
+      Out-SqlForIndeclinableStem $printStatus $pāli1
+    } else {
+      Out-SqlForDeclinableStem $printStatus $pāli1 $stem $pattern
+    }
+
+    if ($printStatus) {
+      Write-Host -ForegroundColor Green " ..."
+    }
+
+    $count++
   }
 }
 
