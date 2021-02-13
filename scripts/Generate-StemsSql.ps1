@@ -15,13 +15,13 @@ $stems =
   | Sort-Object -Property Pāli1
   #| Group-Object -Property Pāli1
   #| ForEach-Object { $_.Group[0] }
-  #| Where-Object { $_.stem -ine "ind" }
+  #| Where-Object { $_.stem -ine "-" }
   #| Select-Object -Skip 0 -First 1
 
 $indexPatternMap = $index | Group-Object -Property name -AsHashTable
 $unknownPatterns =
   $stems
-  | Where-Object { $_.stem -cne "ind" }
+  | Where-Object { $_.stem -cne "-" }
   | Where-Object { -not $indexPatternMap.ContainsKey($_.pattern) }
 
 $unknownPatterns
@@ -133,7 +133,7 @@ function Out-SqlForStem {
 
     if ($stem -eq "*") {
       Out-SqlForIrregularStem $printStatus $pāli1 $pattern
-    } elseif ($stem -eq "ind") {
+    } elseif ($stem -eq "-") {
       Out-SqlForIndeclinableStem $printStatus $pāli1
     } else {
       Out-SqlForDeclinableStem $printStatus $pāli1 $stem $pattern
