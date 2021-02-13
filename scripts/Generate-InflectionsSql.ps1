@@ -122,7 +122,7 @@ function Out-SqlForInflection {
   Process {
     $info = $Inflection.info
     $entries = $Inflection.entries
-    Write-Host -ForegroundColor Green "Writing schema for '$($info.name)' [$($info.SCol)$($info.SRow):$($($info.ECol))$($info.ERow)] ..."
+    Write-Host -ForegroundColor Green "Writing sql for '$($info.name)' [$($info.SCol)$($info.SRow):$($($info.ECol))$($info.ERow)] ..."
 
     $tableName = $info.name.Replace(" ", "_")
     "-- $tableName" | Out-Sql
