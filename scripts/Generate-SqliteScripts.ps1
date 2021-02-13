@@ -1,34 +1,4 @@
-﻿# param (
-#   [Parameter(Mandatory)]
-#   $SrcDir,
-#   [Parameter(Mandatory)]
-#   $DstDir
-# )
-
-<#
-o a.adj in db
-  o load schema
-    x bottom-right - 3 corner cells
-    x name 2nd part is a valid pos
-    v index has same name
-    v has even number of columns
-    v get mapping from grammar -> suffix
-    v grammar has valid parts
-    v inflection is not empty
-    v unknown pos
-    v invalid number of grammar parts for pos
-    v check no spaces or punctuation in inflection
-  o generate .sql
-    v dummy sql
-    - final sql
-    - expansions table
-  o generate .db
-    v run sqlite cmd line
-v integrate above with CI
-  - publish: .csvs, .db, .sql to azure storage
-#>
-
-Import-Module $PSScriptRoot/PSGenSqlite.psm1 -Force
+﻿Import-Module $PSScriptRoot/PSGenSqlite.psm1 -Force
 
 $ioRoot = "$PSScriptRoot/../build"
 
@@ -38,27 +8,19 @@ $abbreviations = Get-Content -Raw "$ioRoot/abbreviations.csv" -Encoding utf8 | R
 
 $inflectionInfos =
   $index
-  | Import-InflectionInfos
+  | Import-InflectionInfos $abbreviations
   | Import-Inflection $inflections $Abbreviations
 
-$errors1 =
+$errors =
   $inflectionInfos
   | Where-Object { $_.error }
 
-$errors1
+$errors
 | ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_.error)" }
 
-if ($errors1) {
+if ($errors) {
   throw "there were one or more errors, see above for details"
 }
-
-$inflectionInfos
-  | Where-Object { -not $_.error }
-  | ForEach-Object {
-    $x = $_.info
-    $c = $_.entries.Count
-    Write-Host -ForegroundColor Green "Loading schema #$($x.Id) ($c) '$($($x.Name))' from $($x.SCol)$($($x.SRow)):$($($x.ECol))$($x.ERow) ..."
-  }
 
 function Out-Sql {
   param (
@@ -74,33 +36,107 @@ function Out-Sql {
 }
 
 $commit_id = $env:GITHUB_SHA ?? "0000000000"
-$run_id = $env:GITHUB_RUN_ID ?? "0"
+$run_number = $env:GITHUB_RUN_NUMBER ?? "0"
 $repository = $env:GITHUB_REPOSITORY ?? "dev"
 
 "/* inflections.db */" | Out-Sql -Overwrite
+"PRAGMA foreign_keys = ON;" | Out-Sql
 "" | Out-Sql
 
 "-- Version" | Out-Sql
-"CREATE TABLE _version (commit_id TEXT NOT NULL, run_id TEXT NOT NULL, repository TEXT NOT NULL);" | Out-Sql
-"INSERT INTO _version (commit_id, run_id, repository)" | Out-Sql
-"VALUES ('$commit_id', '$run_id', '$repository');" | Out-Sql
+"CREATE TABLE _version (commit_id TEXT NOT NULL, run_number TEXT NOT NULL, repository TEXT NOT NULL);" | Out-Sql
+"INSERT INTO _version (commit_id, run_number, repository)" | Out-Sql
+"VALUES ('$commit_id', '$run_number', '$repository');" | Out-Sql
 "" | Out-Sql
 
-"-- PosInfo" | Out-Sql
-"CREATE TABLE pos_info (pos TEXT NOT NULL PRIMARY KEY, parts INTEGER NOT NULL);" | Out-Sql
-"INSERT INTO pos_info (pos, parts)" | Out-Sql
+"-- Abbreviations" | Out-Sql
+"CREATE TABLE _abbreviations (name TEXT NOT NULL PRIMARY KEY, description TEXT NOT NULL, isgrammar INTEGER NOT NULL, isverb INTEGER NOT NULL);" | Out-Sql
+"INSERT INTO _abbreviations (name, description, isgrammar, isverb)" | Out-Sql
 "VALUES" | Out-Sql
-($PosInfo.Keys | ForEach-Object { "  ('$_', $($PosInfo[$_]))" }) -join ",`n" | Out-Sql
+($Abbreviations.Keys | Sort-Object | ForEach-Object { "  ('$($Abbreviations.$_.name)', '$($Abbreviations.$_.description)', '$($Abbreviations.$_.isgrammar)', '$($Abbreviations.$_.isverb)')" }) -join ",`n" | Out-Sql
 ";" | Out-Sql
 "" | Out-Sql
 
-"-- VerbCategories" | Out-Sql
-"CREATE TABLE verb_categories (category TEXT NOT NULL PRIMARY KEY);" | Out-Sql
-"INSERT INTO verb_categories (category)" | Out-Sql
-"VALUES" | Out-Sql
-($VerbCategories.Keys | ForEach-Object { "  ('$_')" }) -join ",`n" | Out-Sql
-";" | Out-Sql
-"" | Out-Sql
+function Out-SqlForInflectionForVerbs {
+  param (
+    $TableName,
+    $Entries
+  )
+
+  Process {
+    @"
+CREATE TABLE $TableName (
+  actrefxl TEXT NOT NULL,
+  tense TEXT NOT NULL,
+  person TEXT NOT NULL,
+  number TEXT NOT NULL,
+  inflections TEXT NOT NULL,
+  PRIMARY KEY(actrefxl, tense, person, number),
+  FOREIGN KEY (actrefxl) REFERENCES _abbreviations (name),
+  FOREIGN KEY (tense) REFERENCES _abbreviations (name),
+  FOREIGN KEY (person) REFERENCES _abbreviations (name),
+  FOREIGN KEY (number) REFERENCES _abbreviations (name)
+);
+"@ | Out-Sql
+    "INSERT INTO $TableName (actrefxl, tense, person, number, inflections)" | Out-Sql
+    "VALUES" | Out-Sql
+    ($Entries.Keys | ForEach-Object {
+      "  ('$($Entries.$_.grammar[0])', '$($Entries.$_.grammar[1])', '$($Entries.$_.grammar[2])', '$($Entries.$_.grammar[3])', '$($Entries.$_.inflections -join ',')')"
+    }) -join ",`n" | Out-Sql
+  }
+}
+
+function Out-SqlForInflectionForNonVerbs {
+  param (
+    $TableName,
+    $Entries
+  )
+
+  Process {
+    @"
+CREATE TABLE $TableName (
+  gender TEXT NOT NULL,
+  "case" TEXT NOT NULL,
+  number TEXT NOT NULL,
+  inflections TEXT NOT NULL,
+  PRIMARY KEY(gender, "case", number),
+  FOREIGN KEY (gender) REFERENCES _abbreviations (name),
+  FOREIGN KEY ("case") REFERENCES _abbreviations (name),
+  FOREIGN KEY (number) REFERENCES _abbreviations (name)
+);
+"@ | Out-Sql
+    "INSERT INTO $TableName (gender, ""case"", number, inflections)" | Out-Sql
+    "VALUES" | Out-Sql
+    ($Entries.Keys | ForEach-Object {
+      "  ('$($Entries.$_.grammar[0])', '$($Entries.$_.grammar[1])', '$($Entries.$_.grammar[2])', '$($Entries.$_.inflections -join ',')')"
+    }) -join ",`n" | Out-Sql
+  }
+}
+
+function Out-SqlForInflection {
+  param (
+    [Parameter(ValueFromPipeline = $true)]
+    $Inflection
+  )
+
+  Process {
+    $info = $Inflection.info
+    $entries = $Inflection.entries
+    Write-Host -ForegroundColor Green "Writing schema for '$($info.name)' [$($info.SCol)$($info.SRow):$($($info.ECol))$($info.ERow)] ..."
+
+    $tableName = $info.name.Replace(" ", "_")
+    "-- $tableName" | Out-Sql
+    if ($Inflection.info.isverb) {
+      Out-SqlForInflectionForVerbs $tableName $entries
+    } else {
+      Out-SqlForInflectionForNonVerbs $tableName $entries
+    }
+    ";" | Out-Sql
+    "" | Out-Sql
+  }
+}
+
+$inflectionInfos | Sort-Object -Property { $_.info.name } | Out-SqlForInflection
 
 "-- Save to db" | Out-Sql
 ".save $("$ioRoot/inflections.db".Replace("\", "/"))" | Out-Sql

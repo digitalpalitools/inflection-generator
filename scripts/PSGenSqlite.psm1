@@ -1,43 +1,4 @@
-New-Variable -Name 'ArrayOf5EmptyStrings' -Option ReadOnly @("", "", "", "", "")
-
-New-Variable -Name 'PosInfo' -Option ReadOnly -Scope 1 -Value @{
-  "adj" = 3
-  "aor" = 4
-  "aor irreg" = 4
-  "card" = 3
-  "cond" = 4
-  "fem" = 3
-  "fem irreg" = 3
-  "fut" = 4
-  "imperf" = 4
-  "letter" = 3
-  "masc" = 3
-  "masc pl" = 3
-  "nt" = 3
-  "nt irreg" = 3
-  "ordin" = 3
-  "perf" = 4
-  "pp" = 3
-  "pr" = 4
-  "pron" = 3
-  "prp" = 3
-  "ptp" = 3
-  "root" = 3
-  "imp" = 4
-  "opt" = 4
-  "gram" = 3
-}
-
-New-Variable -Name 'VerbCategories' -Option ReadOnly -Scope 1 -Value @{
-  pr = 1
-  fut = 1
-  aor = 1
-  opt = 1
-  imp = 1
-  cond = 1
-  imperf = 1
-  perf = 1
-}
+$ArrayOf5EmptyStrings = @("", "", "", "", "")
 
 function CreateInflectionCsvColumns {
   @(
@@ -49,7 +10,7 @@ function CreateInflectionCsvColumns {
   )
 }
 
-New-Variable -Name 'InflectionCsvColumns' -Option Constant -Value $(CreateInflectionCsvColumns)
+New-Variable -Name 'InflectionCsvColumns' -Option ReadOnly -Force -Value $(CreateInflectionCsvColumns)
 
 function CreateInflectionCsvColumnIndices {
   $i = 0;
@@ -63,7 +24,7 @@ function CreateInflectionCsvColumnIndices {
   $map
 }
 
-New-Variable -Name 'InflectionCsvColumnIndices' -Option Constant -Value $(CreateInflectionCsvColumnIndices)
+New-Variable -Name 'InflectionCsvColumnIndices' -Option ReadOnly -Force -Value $(CreateInflectionCsvColumnIndices)
 
 function TrimWithNull {
   param (
@@ -113,16 +74,20 @@ function Read-AbbreviationsCsv {
   Process {
     $abbreviations = @{}
 
-    ConvertFrom-Csv $Csv -Header @("name", "description")
+    ConvertFrom-Csv $Csv -Header @("name", "description", "isgrammar", "isverb")
     | Where-Object { $_.name -and $_.description }
     | ForEach-Object {
       $name = $_.name | TrimWithNull
-      if ($name -ieq "in comps") {
-        $name = ""
+      $abbreviations.$name = @{
+        name = $name
+        description = $_.description | TrimWithNull
+        isgrammar = ($_.isgrammar  | TrimWithNull) -ceq "gram"
+        isverb = ($_.isverb | TrimWithNull) -ceq "verb"
       }
-
-      $abbreviations.$name = @{ name = $name; description = $_.description | TrimWithNull; }
     }
+
+    # NOTE: Add empty grammar for "in comps"
+    $abbreviations."" = @{ name = ""; description = "grammar absent"; isgrammar = $True; isverb = $False }
 
     $abbreviations
   }
@@ -141,6 +106,7 @@ function Read-InflectionsCsv {
 
 function Import-InflectionInfos {
   param (
+    $Abbreviations,
     [Parameter(ValueFromPipeline = $true)]
     $Index
   )
@@ -163,11 +129,8 @@ function Import-InflectionInfos {
     }
 
     $name = $Index.name.Trim()
-    $pos = $name.Trim().Split(" ")[1..10] -join " "
-    if (-not $PosInfo.ContainsKey($pos)) {
-      "Inflection '$name' is for an unknown part of speech." | New-Error
-      return
-    }
+    $part1 = $name.Trim().Split(" ")[1]
+    $isVerb = -not -not $Abbreviations.$part1.isverb
 
     $sRow = [int] ($Matches[2] - 1)
     $sCol = $Matches[1]
@@ -188,8 +151,10 @@ function Import-InflectionInfos {
 
     @{
       id = $id
-      pos = $pos
       name = $name
+      isverb = -not -not $isVerb
+      grammarparts = $isVerb ? 4 : 3
+      rowoffset = $isVerb ? 2 : 1 # NOTE: Verbs have the active / reflexive overarching row
       srow = $sRow
       scol = $sCol
       erow = $eRow
@@ -223,28 +188,23 @@ function Import-Inflection {
     $sCol = $InflectionCsvColumnIndices.$($InflectionInfo.SCol)
     $eCol = $InflectionCsvColumnIndices.$($InflectionInfo.ECol)
 
-    $rowOffset = 1
-    if ($VerbCategories.ContainsKey($inflection.info.pos)) {
-      # NOTE: Verbs have the active / reflexive overarching row
-      $rowOffset = 2
-    }
-
-    for ($i = $InflectionInfo.SRow + $rowOffset; $i -le $InflectionInfo.ERow; $i += 1) {
+    for ($i = $InflectionInfo.SRow + $inflection.info.rowoffset; $i -le $InflectionInfo.ERow; $i += 1) {
       for ($j = $sCol + 1; $j -le $eCol; $j += 2) {
         $inf = $InflectionCsv[$i].$($InflectionCsvColumns[$j]) | TrimWithNull
         $gra = $InflectionCsv[$i].$($InflectionCsvColumns[$j + 1]) | TrimWithNull
         if ($inf) {
           $inflection.entries.$($gra) = @{
-            grammar = @($ArrayOf5EmptyStrings | Select-Object -First $PosInfo[$inflection.info.Pos]) # in comps
+            grammar = $ArrayOf5EmptyStrings[0..($inflection.info.grammarparts - 1)] # NOTE: default is array of empty strings for "in comps"
             allInflections = $inf
             inflections = $inf.Split("`n") | ForEach-Object { $_ | TrimWithNull } | Where-Object { $_}
           }
 
           if ($gra) {
-            $inflection.entries.$($gra).grammar = $gra.Split(" ") | Where-Object { $_}
+            $inflection.entries.$($gra).grammar = $gra.Split(" ") | Where-Object { $_ }
           }
 
-          if ($VerbCategories.ContainsKey($inflection.entries.$($gra).grammar[0])){
+          # NOTE: Prepend "act" so all grammars have either act or refxl
+          if ($Abbreviations.$($inflection.entries.$($gra).grammar[0]).isverb){
             $inflection.entries.$($gra).grammar = @("act") + $inflection.entries.$($gra).grammar
           }
         }
@@ -256,16 +216,16 @@ function Import-Inflection {
     $errors +=
       $inflection.entries.Keys
       | ForEach-Object { $inflection.entries[$_].grammar }
-      | Where-Object { -not $Abbreviations.ContainsKey($_) }
+      | Where-Object { -not ($Abbreviations.ContainsKey($_) -and $Abbreviations.$_.isgrammar) }
       | ForEach-Object {
-          "Inflection '$($inflection.info.name)' has unrecognized grammar '$_'." | New-Error
+        "Inflection '$($inflection.info.name)' has unrecognized grammar '$_'." | New-Error
       }
 
     $errors +=
       $inflection.entries.Keys
-      | Where-Object { $inflection.entries[$_].grammar.Length -ne $PosInfo[$inflection.info.Pos] }
+      | Where-Object { $inflection.entries[$_].grammar.Length -ne $inflection.info.grammarparts }
       | ForEach-Object {
-        "Inflection '$($inflection.info.name)':'$_' was expected to have '$($PosInfo[$inflection.info.Pos])' grammar entries, instead has '$($inflection.entries[$_].grammar.Length)' grammar entries." | New-Error
+        "Inflection '$($inflection.info.name)':'$_' was expected to have '$($inflection.info.grammarparts)' grammar entries, instead has '$($inflection.entries[$_].grammar.Length)' grammar entries." | New-Error
       }
 
     $errors +=
