@@ -12,10 +12,10 @@ $abbreviations = Get-Content -Raw "$ioRoot/abbreviations.csv" -Encoding utf8 | R
 $stems =
   Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8
   | ConvertFrom-Csv
-  | Group-Object -Property Pāli1
-  | ForEach-Object { $_.Group[0] }
-  #| Select-Object -Skip 0 -First 200
-  | Where-Object { $_.stem -ieq "ind" }
+  #| Group-Object -Property Pāli1
+  #| ForEach-Object { $_.Group[0] }
+  #| Where-Object { $_.stem -ine "ind" }
+  #| Select-Object -Skip 0 -First 1
 
 $indexPatternMap = $index | Group-Object -Property name -AsHashTable
 $unknownPatterns =
@@ -32,10 +32,11 @@ if ($unknownPatterns) {
   Write-Host -ForegroundColor Green "Stems validation completed successfully."
 }
 
-$inflectionInfos =
+$inflectionInfoMap =
   $index
   | Import-InflectionInfos $abbreviations
   | Import-Inflection $inflections $Abbreviations
+  | Group-Object -Property { $_.info.name } -AsHashTable
 
 function Out-Sql {
   param (
@@ -59,6 +60,13 @@ function Out-SqlForIrregularStem {
 
   if ($printStatus) {
     Write-Host -ForegroundColor DarkMagenta "[irregular]" -NoNewline
+  }
+
+  $entries = $inflectionInfoMap.$pattern.entries
+  $entries.Keys
+  | ForEach-Object { $entries.$_.inflections }
+  | ForEach-Object {
+    "  ('$_', '$($pāli1)', '*')," | Out-Sql
   }
 }
 
@@ -87,6 +95,13 @@ function Out-SqlForDeclinableStem {
   if ($printStatus) {
     Write-Host -ForegroundColor Blue "[declinable]" -NoNewline
   }
+
+  $entries = $inflectionInfoMap.$pattern.entries
+  $entries.Keys
+  | ForEach-Object { $entries.$_.inflections }
+  | ForEach-Object {
+    "  ('$stem$_', '$($pāli1)', '')," | Out-Sql
+  }
 }
 
 function Out-SqlForStem {
@@ -102,7 +117,8 @@ function Out-SqlForStem {
   Process {
     $pāli1 = $StemRecord.pāli1 | TrimWithNull
     $stem = $StemRecord.stem | TrimWithNull
-    $printStatus = $count % 100 -eq 0
+    $pattern = $StemRecord.pattern | TrimWithNull
+    $printStatus = $count % 1000 -eq 0
     if ($printStatus) {
       Write-Host -ForegroundColor Green "[$count] Writing sql '$pāli1' " -NoNewline
     }
@@ -155,9 +171,9 @@ $stems | ForEach-Object { "  ('$($_.pāli1)', '$($_.stem)', '$($_.pattern)')," }
 
 $stems | Out-SqlForStem
 
-"  ('$endRecordMarker', 'ā', '')" | Out-Sql
+"  ('$endRecordMarker', '$($stems[0].pāli1)', '')" | Out-Sql
 ";" | Out-Sql
-"DELETE FROM all_words WHERE pāli1 = '$endRecordMarker';" | Out-Sql
+"DELETE FROM all_words WHERE pāli = '$endRecordMarker';" | Out-Sql
 "" | Out-Sql
 
 "-- Save to db" | Out-Sql
