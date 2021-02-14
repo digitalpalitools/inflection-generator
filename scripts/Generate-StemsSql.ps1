@@ -9,9 +9,7 @@ $ioRoot = "$PSScriptRoot/../build"
 $index = Get-Content -Raw "$ioRoot/index.csv" -Encoding utf8 | Read-IndexCsv
 $inflections = Get-Content -Raw "$ioRoot/declensions.csv" -Encoding utf8 | Read-InflectionsCsv
 $abbreviations = Get-Content -Raw "$ioRoot/abbreviations.csv" -Encoding utf8 | Read-AbbreviationsCsv
-$stems =
-  Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8
-  | ConvertFrom-Csv
+$stems = Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8 | Read-StemsCsv
   | Sort-Object -Property Pāli1
   #| Group-Object -Property Pāli1
   #| ForEach-Object { $_.Group[0] }
@@ -123,9 +121,9 @@ function Out-SqlForStem {
   }
 
   Process {
-    $pāli1 = $StemRecord.pāli1 | TrimWithNull
-    $stem = $StemRecord.stem | TrimWithNull
-    $pattern = $StemRecord.pattern | TrimWithNull
+    $pāli1 = $StemRecord.pāli1
+    $stem = $StemRecord.stem
+    $pattern = $StemRecord.pattern
     $printStatus = $count % 1000 -eq 0
     if ($printStatus) {
       Write-Host -ForegroundColor Green "[$count] Writing sql '$pāli1' " -NoNewline

@@ -68,6 +68,7 @@ xxx card,AC23:AG23
       $indices[7].error | Should -BeExactly "Inflection 'xxx card' location must have start row and col less than end row and col."
     }
   }
+
   Context "Import-Inflection" {
     It "Basic test" {
       $ii = 'eka card,Y2:AC5' | Read-IndexCsv | Import-InflectionInfos $Abbreviations
@@ -203,6 +204,24 @@ pr 2nd,asi,pr 2nd sg,atha,pr 2nd pl,ase,reflx pr 2nd sg,avhe,reflx pr 2nd pl
       $i.entries."02x07-reflx pr 3rd pl".grammar | Should -BeExactly @("reflx", "pr", "3rd", "pl")
       $i.entries."02x07-reflx pr 3rd pl".allInflections | Should -BeExactly "ante"
       $i.entries."02x07-reflx pr 3rd pl".inflections | Should -BeExactly @("ante")
+    }
+  }
+
+  Context "Read CSVs" {
+    It "Read Stem CSV" {
+      $stems = @'
+Pāli1,Stem,Pattern
+pali1,*,pat1
+pali2 ,- ,pat2
+pali3_,s_3_,pat3_
+,x,pat3
+x, ,pat3
+'@
+      | Read-StemsCsv
+
+      $stems.pāli1 | Should -BeExactly @("pali1", "pali2", "pali3_")
+      $stems.stem | Should -BeExactly @("*", "-", "s_3 ")
+      $stems.pattern | Should -BeExactly @("pat1", "pat2", "pat3_")
     }
   }
 }

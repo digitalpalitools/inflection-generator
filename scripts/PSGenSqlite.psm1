@@ -65,6 +65,29 @@ function Read-IndexCsv {
   }
 }
 
+function Read-StemsCsv {
+  param (
+    [Parameter(ValueFromPipeline = $true)]
+    $Csv
+  )
+
+  Process {
+    ConvertFrom-Csv $Csv
+    | ForEach-Object {
+      @{
+        pāli1 = $_.pāli1 | TrimWithNull
+        stem = $_.stem | TrimWithNull
+        pattern = $_.pattern | TrimWithNull
+      }
+    }
+    | Where-Object { $_.pāli1 -and $_.stem }
+    | ForEach-Object {
+      $_.stem = $_.stem -replace "^(.+)_$",'$1 '
+      $_
+    }
+  }
+}
+
 function Read-AbbreviationsCsv {
   param (
     [Parameter(ValueFromPipeline = $true)]
