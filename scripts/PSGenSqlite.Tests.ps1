@@ -83,25 +83,25 @@ xxx card,AC23:AG23
       $i.info | InflectionInfo2String | Should -BeExactly "1, eka card, False, 3, 1, 1, Y, 4, AC"
       $i.entries.Count | Should -Be 5
 
-      $i.entries."masc nom sg".grammar | Should -BeExactly @("masc", "nom", "sg")
-      $i.entries."masc nom sg".allInflections | Should -BeExactly "eko"
-      $i.entries."masc nom sg".inflections | Should -BeExactly @("eko")
+      $i.entries."02x25-masc nom sg".grammar | Should -BeExactly @("masc", "nom", "sg")
+      $i.entries."02x25-masc nom sg".allInflections | Should -BeExactly "eko"
+      $i.entries."02x25-masc nom sg".inflections | Should -BeExactly @("eko")
 
-      $i.entries."masc nom pl".grammar | Should -BeExactly @("masc", "nom", "pl")
-      $i.entries."masc nom pl".allInflections | Should -BeExactly "eke"
-      $i.entries."masc nom pl".inflections | Should -BeExactly @("eke")
+      $i.entries."02x27-masc nom pl".grammar | Should -BeExactly @("masc", "nom", "pl")
+      $i.entries."02x27-masc nom pl".allInflections | Should -BeExactly "eke"
+      $i.entries."02x27-masc nom pl".inflections | Should -BeExactly @("eke")
 
-      $i.entries."masc acc sg".grammar | Should -BeExactly @("masc", "acc", "sg")
-      $i.entries."masc acc sg".allInflections | Should -BeExactly "ekaṃ"
-      $i.entries."masc acc sg".inflections | Should -BeExactly @("ekaṃ")
+      $i.entries."03x25-masc acc sg".grammar | Should -BeExactly @("masc", "acc", "sg")
+      $i.entries."03x25-masc acc sg".allInflections | Should -BeExactly "ekaṃ"
+      $i.entries."03x25-masc acc sg".inflections | Should -BeExactly @("ekaṃ")
 
-      $i.entries."masc acc pl".grammar | Should -BeExactly @("masc", "acc", "pl")
-      $i.entries."masc acc pl".allInflections | Should -BeExactly "eke"
-      $i.entries."masc acc pl".inflections | Should -BeExactly @("eke")
+      $i.entries."03x27-masc acc pl".grammar | Should -BeExactly @("masc", "acc", "pl")
+      $i.entries."03x27-masc acc pl".allInflections | Should -BeExactly "eke"
+      $i.entries."03x27-masc acc pl".inflections | Should -BeExactly @("eke")
 
-      $i.entries."".grammar | Should -BeExactly @("", "", "")
-      $i.entries."".allInflections | Should -BeExactly "a"
-      $i.entries."".inflections | Should -BeExactly @("a")
+      $i.entries."04x25-".grammar | Should -BeExactly @("", "", "")
+      $i.entries."04x25-".allInflections | Should -BeExactly "a"
+      $i.entries."04x25-".inflections | Should -BeExactly @("a")
     }
 
     It "Error if not found at index" {
@@ -196,13 +196,13 @@ pr 2nd,asi,pr 2nd sg,atha,pr 2nd pl,ase,reflx pr 2nd sg,avhe,reflx pr 2nd pl
       $i.info | InflectionInfo2String | Should -BeExactly "1, ati pr, True, 4, 2, 0, A, 4, I"
       $i.entries.Count | Should -Be 8
 
-      $i.entries."pr 3rd sg".grammar | Should -BeExactly @("act", "pr", "3rd", "sg")
-      $i.entries."pr 3rd sg".allInflections | Should -BeExactly "ati"
-      $i.entries."pr 3rd sg".inflections | Should -BeExactly @("ati")
+      $i.entries."02x01-pr 3rd sg".grammar | Should -BeExactly @("act", "pr", "3rd", "sg")
+      $i.entries."02x01-pr 3rd sg".allInflections | Should -BeExactly "ati"
+      $i.entries."02x01-pr 3rd sg".inflections | Should -BeExactly @("ati")
 
-      $i.entries."reflx pr 3rd pl".grammar | Should -BeExactly @("reflx", "pr", "3rd", "pl")
-      $i.entries."reflx pr 3rd pl".allInflections | Should -BeExactly "ante"
-      $i.entries."reflx pr 3rd pl".inflections | Should -BeExactly @("ante")
+      $i.entries."02x07-reflx pr 3rd pl".grammar | Should -BeExactly @("reflx", "pr", "3rd", "pl")
+      $i.entries."02x07-reflx pr 3rd pl".allInflections | Should -BeExactly "ante"
+      $i.entries."02x07-reflx pr 3rd pl".inflections | Should -BeExactly @("ante")
     }
   }
 }

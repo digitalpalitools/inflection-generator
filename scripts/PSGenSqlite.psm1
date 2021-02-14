@@ -193,19 +193,20 @@ function Import-Inflection {
         $inf = $InflectionCsv[$i].$($InflectionCsvColumns[$j]) | TrimWithNull
         $gra = $InflectionCsv[$i].$($InflectionCsvColumns[$j + 1]) | TrimWithNull
         if ($inf) {
-          $inflection.entries.$($gra) = @{
+          $entryKey = "{0:d2}x{1:d2}-$gra" -f $i,$j
+          $inflection.entries.$entryKey = @{
             grammar = $ArrayOf5EmptyStrings[0..($inflection.info.grammarparts - 1)] # NOTE: default is array of empty strings for "in comps"
             allInflections = $inf
             inflections = $inf.Split("`n") | ForEach-Object { $_ | TrimWithNull } | Where-Object { $_}
           }
 
           if ($gra) {
-            $inflection.entries.$($gra).grammar = $gra.Split(" ") | Where-Object { $_ }
+            $inflection.entries.$entryKey.grammar = $gra.Split(" ") | Where-Object { $_ }
           }
 
           # NOTE: Prepend "act" so all grammars have either act or refxl
-          if ($Abbreviations.$($inflection.entries.$($gra).grammar[0]).isverb){
-            $inflection.entries.$($gra).grammar = @("act") + $inflection.entries.$($gra).grammar
+          if ($Abbreviations.$($inflection.entries.$entryKey.grammar[0]).isverb){
+            $inflection.entries.$entryKey.grammar = @("act") + $inflection.entries.$entryKey.grammar
           }
         }
       }
@@ -225,7 +226,7 @@ function Import-Inflection {
       $inflection.entries.Keys
       | Where-Object { $inflection.entries[$_].grammar.Length -ne $inflection.info.grammarparts }
       | ForEach-Object {
-        "Inflection '$($inflection.info.name)':'$_' was expected to have '$($inflection.info.grammarparts)' grammar entries, instead has '$($inflection.entries[$_].grammar.Length)' grammar entries." | New-Error
+        "Inflection '$($inflection.info.name)':'$($inflection.entries[$_].grammar -join " ")' was expected to have '$($inflection.info.grammarparts)' grammar entries, instead has '$($inflection.entries[$_].grammar.Length)' grammar entries." | New-Error
       }
 
     $errors +=
