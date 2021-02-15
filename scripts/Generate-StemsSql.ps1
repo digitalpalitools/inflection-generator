@@ -11,10 +11,8 @@ $inflections = Get-Content -Raw "$ioRoot/declensions.csv" -Encoding utf8 | Read-
 $abbreviations = Get-Content -Raw "$ioRoot/abbreviations.csv" -Encoding utf8 | Read-AbbreviationsCsv
 $stems = Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8 | Read-StemsCsv
   | Sort-Object -Property Pāli1
-  #| Group-Object -Property Pāli1
-  #| ForEach-Object { $_.Group[0] }
   #| Where-Object { $_.stem -ine "-" }
-  #| Select-Object -Skip 0 -First 1
+  #| Select-Object -Skip 0 -First 1000
 
 $indexPatternMap = $index | Group-Object -Property name -AsHashTable
 $unknownPatterns =

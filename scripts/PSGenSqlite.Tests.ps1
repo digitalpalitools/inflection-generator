@@ -220,7 +220,7 @@ x, ,pat3
       | Read-StemsCsv
 
       $stems.pāli1 | Should -BeExactly @("pali1", "pali2", "pali3_")
-      $stems.stem | Should -BeExactly @("*", "-", "s_3 ")
+      $stems.stem | Should -BeExactly @("*", "-", "s_3_")
       $stems.pattern | Should -BeExactly @("pat1", "pat2", "pat3_")
     }
   }

@@ -81,10 +81,6 @@ function Read-StemsCsv {
       }
     }
     | Where-Object { $_.pāli1 -and $_.stem }
-    | ForEach-Object {
-      $_.stem = $_.stem -replace "^(.+)_$",'$1 '
-      $_
-    }
   }
 }
 
