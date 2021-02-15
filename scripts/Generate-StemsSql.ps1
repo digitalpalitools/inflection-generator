@@ -70,10 +70,12 @@ function Out-SqlForIrregularStem {
 
   $entries = $inflectionInfoMap.$pattern.entries
   $entries.Keys
-  | ForEach-Object { $entries.$_.inflections }
   | ForEach-Object {
-    "  ('$_', '$($pāli1)', '*')," | Out-Sql
+    $grammar = $entries.$_.grammar -join " "
+    $entries.$_.inflections
+    | ForEach-Object { "  ('$_', '$pāli1', '$grammar', '*')," }
   }
+  | Out-Sql
 }
 
 function Out-SqlForIndeclinableStem {
@@ -87,7 +89,7 @@ function Out-SqlForIndeclinableStem {
   }
 
   $word = $pāli1 -replace "[ ]*\d*$","" | TrimWithNull
-  "  ('$word', '$($pāli1)', 'ind')," | Out-Sql
+  "  ('$word', '$pāli1', '', 'ind')," | Out-Sql
 }
 
 function Out-SqlForDeclinableStem {
@@ -104,10 +106,12 @@ function Out-SqlForDeclinableStem {
 
   $entries = $inflectionInfoMap.$pattern.entries
   $entries.Keys
-  | ForEach-Object { $entries.$_.inflections }
   | ForEach-Object {
-    "  ('$stem$_', '$($pāli1)', '')," | Out-Sql
+    $grammar = $entries.$_.grammar -join " "
+    $entries.$_.inflections
+    | ForEach-Object { "  ('$stem$_', '$pāli1', '$grammar', '')," }
   }
+  | Out-Sql
 }
 
 function Out-SqlForStem {
@@ -171,13 +175,11 @@ $stems | ForEach-Object { "  ('$($_.pāli1)', '$($_.stem)', '$($_.pattern)')," }
 "" | Out-Sql
 
 "-- all_words" | Out-Sql
-"CREATE TABLE all_words (pāli TEXT NOT NULL, pāli1 TEXT NOT NULL, type TEXT NOT NULL, FOREIGN KEY (pāli1) REFERENCES _stems (pāli1));" | Out-Sql
-"INSERT INTO all_words (pāli, pāli1, type)" | Out-Sql
+"CREATE TABLE all_words (pāli TEXT NOT NULL, pāli1 TEXT NOT NULL, grammar TEXT NOT NULL, type TEXT NOT NULL, FOREIGN KEY (pāli1) REFERENCES _stems (pāli1));" | Out-Sql
+"INSERT INTO all_words (pāli, pāli1, grammar, type)" | Out-Sql
 "VALUES" | Out-Sql
-
 $stems | Out-SqlForStem
-
-"  ('$endRecordMarker', '$($stems[0].pāli1)', '')" | Out-Sql
+"  ('$endRecordMarker', '$($stems[0].pāli1)', '', '')" | Out-Sql
 ";" | Out-Sql
 "DELETE FROM all_words WHERE pāli = '$endRecordMarker';" | Out-Sql
 "" | Out-Sql
