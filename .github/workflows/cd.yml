@@ -46,6 +46,11 @@ jobs:
           cat ./build/inflections.sql | ./bin/linux/sqlite3
         continue-on-error: false
 
+      - name: inflections - .db -> .zip
+        uses: montudor/action-zip@v0.1.1
+        with:
+          args: zip -9 -j ./build/inflections.zip ./build/inflections.db
+
       - name: stems - .csv -> .sql
         run: |
           ./scripts/Generate-StemsSql.ps1
@@ -56,6 +61,11 @@ jobs:
         run: |
           cat ./build/stems.sql | ./bin/linux/sqlite3
         continue-on-error: false
+
+      - name: stems - .db -> .zip
+        uses: montudor/action-zip@v0.1.1
+        with:
+          args: zip -9 -j ./build/stems.zip ./build/stems.db
 
       - name: Azure Login
         uses: azure/login@v1
@@ -68,10 +78,6 @@ jobs:
           azcliversion: 2.0.72
           inlineScript: |
               az storage blob upload-batch --account-name ksapplications -d '$web\inflections' -s ./build
-
-      - name: Set cache-control
-        run: |
-              az storage blob upload --account-name ksapplications --container-name '$web' --name 'inflections/inflections.db' --file ./build/inflections.db --content-cache-control 'no-store max-age=0'
 
       - name: Azure Logout
         run: |
