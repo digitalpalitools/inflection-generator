@@ -21,7 +21,7 @@ $unknownPatterns =
   | Where-Object { -not $indexPatternMap.ContainsKey($_.pattern) }
 
 $unknownPatterns
-| ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_)" }
+| ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_.stem) | $($_.pāli1) | $($_.pattern) " }
 
 if ($unknownPatterns) {
   throw "there were one or more stems that dont have a corresponding inflection. see above errors for more details."
