@@ -83,10 +83,10 @@ $gramValues.Keys | ForEach-Object {
 
 $tableName = "_index"
 "-- $tableName" | Out-Sql
-"CREATE TABLE $tableName (name TEXT NOT NULL PRIMARY KEY, inflection_class TEXT NOT NULL, bounds TEXT NOT NULL, example_info INTEGER NOT NULL);" | Out-Sql
-"INSERT INTO $tableName (name, inflection_class, bounds, example_info)" | Out-Sql
+"CREATE TABLE $tableName (name TEXT NOT NULL PRIMARY KEY, inflection_class TEXT NOT NULL, example_info INTEGER NOT NULL);" | Out-Sql
+"INSERT INTO $tableName (name, inflection_class, example_info)" | Out-Sql
 "VALUES" | Out-Sql
-($index | ForEach-Object { "  ('$($_.name)', '$($_.inflectionclass)', '$($_.bounds)', '$($_.exampleinfo)')" }) -join ",`n" | Out-Sql
+($index | ForEach-Object { "  ('$($_.name)', '$($_.inflectionclass)', '$($_.exampleinfo)')" }) -join ",`n" | Out-Sql
 ";" | Out-Sql
 "" | Out-Sql
 
