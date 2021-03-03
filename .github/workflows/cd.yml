@@ -55,7 +55,7 @@ jobs:
       - name: stems - .sql -> .db
         run: |
           cat ./build/stems.sql | ./bin/linux/sqlite3
-          ./bin/linux/sqlite3.exe ./build/stems.db '.dump _stems' | ./bin/linux/sqlite3.exe ./build/inflections.db
+          ./bin/linux/sqlite3 ./build/stems.db '.dump _stems' | ./bin/linux/sqlite3 ./build/inflections.db
         continue-on-error: false
 
       - name: inflections - .db -> .zip
