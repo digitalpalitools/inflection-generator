@@ -176,7 +176,7 @@ $stems | ForEach-Object { "  ('$($_.pāli1)', '$($_.stem)', '$($_.pattern)')," }
 "CREATE TABLE all_words (pāli TEXT NOT NULL, pāli1 TEXT NOT NULL, grammar TEXT NOT NULL, type TEXT NOT NULL, FOREIGN KEY (pāli1) REFERENCES _stems (pāli1));" | Out-Sql
 "INSERT INTO all_words (pāli, pāli1, grammar, type)" | Out-Sql
 "VALUES" | Out-Sql
-# $stems | Out-SqlForStem
+$stems | Out-SqlForStem
 "  ('$endRecordMarker', '$($stems[0].pāli1)', '', '')" | Out-Sql
 ";" | Out-Sql
 "DELETE FROM all_words WHERE pāli = '$endRecordMarker';" | Out-Sql
