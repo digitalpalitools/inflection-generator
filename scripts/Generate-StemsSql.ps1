@@ -6,9 +6,9 @@ Import-Module $PSScriptRoot/PSGenSqlite.psm1 -Force
 
 $ioRoot = "$PSScriptRoot/../build"
 
-$index = Get-Content -Raw "$ioRoot/index.csv" -Encoding utf8 | Read-IndexCsv
-$inflections = Get-Content -Raw "$ioRoot/declensions.csv" -Encoding utf8 | Read-InflectionsCsv
 $abbreviations = Get-Content -Raw "$ioRoot/abbreviations.csv" -Encoding utf8 | Read-AbbreviationsCsv
+$index = Get-Content -Raw "$ioRoot/index.csv" -Encoding utf8 | Read-IndexCsv $abbreviations
+$inflections = Get-Content -Raw "$ioRoot/declensions.csv" -Encoding utf8 | Read-InflectionsCsv
 $stems = Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8 | Read-StemsCsv
   | Sort-Object -Property Pāli1
   #| Where-Object { $_.stem -ine "-" }
@@ -38,7 +38,7 @@ Write-Host -ForegroundColor Green "Stems validation completed successfully."
 
 $inflectionInfoMap =
   $index
-  | Import-InflectionInfos $abbreviations
+  | Import-InflectionInfos
   | Import-Inflection $inflections $Abbreviations
   | Group-Object -Property { $_.info.name } -AsHashTable
 
@@ -176,7 +176,7 @@ $stems | ForEach-Object { "  ('$($_.pāli1)', '$($_.stem)', '$($_.pattern)')," }
 "CREATE TABLE all_words (pāli TEXT NOT NULL, pāli1 TEXT NOT NULL, grammar TEXT NOT NULL, type TEXT NOT NULL, FOREIGN KEY (pāli1) REFERENCES _stems (pāli1));" | Out-Sql
 "INSERT INTO all_words (pāli, pāli1, grammar, type)" | Out-Sql
 "VALUES" | Out-Sql
-$stems | Out-SqlForStem
+# $stems | Out-SqlForStem
 "  ('$endRecordMarker', '$($stems[0].pāli1)', '', '')" | Out-Sql
 ";" | Out-Sql
 "DELETE FROM all_words WHERE pāli = '$endRecordMarker';" | Out-Sql

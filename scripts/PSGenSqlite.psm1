@@ -52,16 +52,50 @@ function New-Error {
   }
 }
 
+function Get-InflectionClass {
+  param (
+    $Abbreviations,
+    [Parameter(ValueFromPipeline = $true)]
+    $Pattern
+  )
+
+  Process {
+    $name = $Pattern.Trim()
+
+    $inflectionClass = ""
+    if ($name -match "pron 1st$") {
+      $inflectionClass = "pron1st"
+    } elseif ($name -match "pron 2nd$") {
+      $inflectionClass = "pron2nd"
+    } elseif ($name -match "pron dual$") {
+      $inflectionClass = "prondual"
+    } elseif ($name.Split(" ")[1] -and $Abbreviations.$($name.Split(" ")[1]).isverb) {
+      $inflectionClass = "verb"
+    }
+
+    $inflectionClass
+  }
+}
+
 function Read-IndexCsv {
   param (
+    $Abbreviations,
     [Parameter(ValueFromPipeline = $true)]
     $Csv
   )
 
   Process {
-    ConvertFrom-Csv $Csv -Header @("name", "bounds")
-    | Where-Object { $_.name -or $_.bounds }
-    | ForEach-Object { @{ name = $_.name | TrimWithNull; bounds = $_.bounds | TrimWithNull; } }
+    ConvertFrom-Csv $Csv -Header @("name", "bounds", "exampleinfo")
+    | ForEach-Object {
+      $name = $_.name | TrimWithNull
+      @{
+        name = $name
+        inflectionclass = $name | Get-InflectionClass $Abbreviations
+        bounds = $_.bounds | TrimWithNull
+        exampleinfo = $_.exampleinfo | TrimWithNull
+      }
+    }
+    | Where-Object { $_.name -or $_.bounds -or $_.exampleinfo }
   }
 }
 
@@ -125,7 +159,6 @@ function Read-InflectionsCsv {
 
 function Import-InflectionInfos {
   param (
-    $Abbreviations,
     [Parameter(ValueFromPipeline = $true)]
     $Index
   )
@@ -137,8 +170,8 @@ function Import-InflectionInfos {
   Process {
     $id++
 
-    if ((-not $Index.name) -or (-not $Index.bounds)) {
-      "Index row $id is invalid." | New-Error
+    if ((-not $Index.name) -or (-not $Index.bounds) -or (-not $Index.exampleinfo)) {
+      "Index row $id must have name, bounds and example info." | New-Error
       return
     }
 
@@ -147,10 +180,7 @@ function Import-InflectionInfos {
       return
     }
 
-    $name = $Index.name.Trim()
-    $part1 = $name.Trim().Split(" ")[1]
-    $isVerb = -not -not $Abbreviations.$part1.isverb
-
+    $name = $Index.name
     $sRow = [int] ($Matches[2] - 1)
     $sCol = $Matches[1]
     $eRow = [int] ($Matches[4] - 1)
@@ -171,9 +201,9 @@ function Import-InflectionInfos {
     @{
       id = $id
       name = $name
-      isverb = -not -not $isVerb
-      grammarparts = $isVerb ? 4 : 3
-      rowoffset = $isVerb ? 2 : 1 # NOTE: Verbs have the active / reflexive overarching row
+      inflectionclass = $Index.inflectionclass
+      grammarparts = ($Index.inflectionclass -eq "verb") ? 4 : 3
+      rowoffset = ($Index.inflectionclass -eq "verb") ? 2 : 1 # NOTE: Verbs have the active / reflexive overarching row
       srow = $sRow
       scol = $sCol
       erow = $eRow
@@ -198,8 +228,8 @@ function Import-Inflection {
     }
 
     $name = $InflectionCsv[$InflectionInfo.SRow]."$($InflectionInfo.SCol)".Trim()
-    if ($name -cne $InflectionInfo.Name) {
-      "Inflection '$($InflectionInfo.Name)' not found at $($InflectionInfo.SCol)$($InflectionInfo.SRow+1)." | New-Error
+    if ($name -cne $InflectionInfo.name) {
+      "Inflection '$($InflectionInfo.name)' not found at $($InflectionInfo.SCol)$($InflectionInfo.SRow+1)." | New-Error
       return
     }
 
@@ -224,7 +254,7 @@ function Import-Inflection {
           }
 
           # NOTE: Prepend "act" so all grammars have either act or refxl
-          if ($Abbreviations.$($inflection.entries.$entryKey.grammar[0]).isverb){
+          if (($inflection.info.inflectionclass -eq "verb") -and ($inflection.entries.$entryKey.grammar.length -ne 4)) {
             $inflection.entries.$entryKey.grammar = @("act") + $inflection.entries.$entryKey.grammar
           }
         }

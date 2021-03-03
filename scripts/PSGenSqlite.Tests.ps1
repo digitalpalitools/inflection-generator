@@ -11,7 +11,7 @@ BeforeAll {
       if ($Info.error) {
         $Info.error
       } else {
-        "$($Info.id), $($Info.name), $($Info.isverb), $($Info.grammarparts), $($Info.rowoffset), $($Info.srow), $($Info.scol), $($Info.erow), $($Info.ecol)"
+        "$($Info.id), $($Info.name), $($Info.inflectionclass), $($Info.grammarparts), $($Info.rowoffset), $($Info.srow), $($Info.scol), $($Info.erow), $($Info.ecol)"
       }
     }
   }
@@ -45,33 +45,37 @@ Describe "GenSqlite Tests" {
   Context "Import-InflectionIndices" {
     It "Basic test" {
       $index = @'
-a adj,A3:M12
-,A14:M23
-in adj,A25:M3 4
+a adj,A3:M12,ex1
+z pron dual,A14:M23,ex1
+in adj,A25:M3 4,ex1
 atthu imp,AZ136:BB137,x,x,
-ī adj
-a pron,AC23:AF31
-abc pron,AC23:AC25
-xxx card,AC23:AG23
+y 2,ī adj,ex1
+a pron,AC23:AF31,ex1
+abc pron,AC23:AC25,ex1
+xxx card,AC23:AG23,ex1
+,A3:M12,ex1
+a adj,A3:M12
 '@
-      | Read-IndexCsv
+      | Read-IndexCsv $Abbreviations
 
-      $indices = $index | Import-InflectionInfos $Abbreviations
-      $indices.Length | Should -Be 8
-      $indices[0] | InflectionInfo2String | Should -BeExactly "1, a adj, False, 3, 1, 2, A, 11, M"
-      $indices[1].error | Should -BeExactly "Index row 2 is invalid."
+      $indices = $index | Import-InflectionInfos
+      $indices.Length | Should -Be 10
+      $indices[0] | InflectionInfo2String | Should -BeExactly "1, a adj, , 3, 1, 2, A, 11, M"
+      $indices[1] | InflectionInfo2String | Should -BeExactly "2, z pron dual, prondual, 3, 1, 13, A, 22, M"
       $indices[2].error | Should -BeExactly "Index row 3 has invalid bounds."
-      $indices[3] | InflectionInfo2String | Should -BeExactly "4, atthu imp, True, 4, 2, 135, AZ, 136, BB"
-      $indices[4].error | Should -BeExactly "Index row 5 is invalid."
+      $indices[3] | InflectionInfo2String | Should -BeExactly "4, atthu imp, verb, 4, 2, 135, AZ, 136, BB"
+      $indices[4].error | Should -BeExactly "Index row 5 has invalid bounds."
       $indices[5].error | Should -BeExactly "Inflection 'a pron' must have even number of columns (grammar and inflection)."
       $indices[6].error | Should -BeExactly "Inflection 'abc pron' location must have start row and col less than end row and col."
       $indices[7].error | Should -BeExactly "Inflection 'xxx card' location must have start row and col less than end row and col."
+      $indices[8].error | Should -BeExactly "Index row 9 must have name, bounds and example info."
+      $indices[9].error | Should -BeExactly "Index row 10 must have name, bounds and example info."
     }
   }
 
   Context "Import-Inflection" {
     It "Basic test" {
-      $ii = 'eka card,Y2:AC5' | Read-IndexCsv | Import-InflectionInfos $Abbreviations
+      $ii = 'eka card,Y2:AC5,ex1' | Read-IndexCsv | Import-InflectionInfos
       $inflection = @'
 ,,,,,,,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,,,eka card,masc sg,,masc pl,
@@ -81,7 +85,7 @@ xxx card,AC23:AG23
 '@ | Read-InflectionsCsv
 
       $i = $ii | Import-Inflection $inflection $Abbreviations
-      $i.info | InflectionInfo2String | Should -BeExactly "1, eka card, False, 3, 1, 1, Y, 4, AC"
+      $i.info | InflectionInfo2String | Should -BeExactly "1, eka card, , 3, 1, 1, Y, 4, AC"
       $i.entries.Count | Should -Be 5
 
       $i.entries."02x25-masc nom sg".grammar | Should -BeExactly @("masc", "nom", "sg")
@@ -106,7 +110,7 @@ xxx card,AC23:AG23
     }
 
     It "Error if not found at index" {
-      $ii = 'x adx,B1:D4' | Read-IndexCsv | Import-InflectionInfos $Abbreviations
+      $ii = 'x adx,B1:D4,exx1' | Read-IndexCsv | Import-InflectionInfos
       $inflection = @"
 ,
 ,x adx
@@ -126,7 +130,7 @@ xxx card,AC23:AG23
     }
 
     It "Grammar has 1 error" {
-      $ii = 'eka card,A1:E3' | Read-IndexCsv | Import-InflectionInfos $Abbreviations
+      $ii = 'eka card,A1:E3,?' | Read-IndexCsv | Import-InflectionInfos
       $inflection = @'
 eka card,masc sg,,masc pl,
 nom,eko,masc nom sg,eke,masc nom plx
@@ -139,7 +143,7 @@ acc,ekaṃ,masc acc sg,eke,masc acc pl
     }
 
     It "Grammar has multiple errors" {
-      $ii = 'eka card,A1:E3' | Read-IndexCsv | Import-InflectionInfos $Abbreviations
+      $ii = 'eka card,A1:E3,?' | Read-IndexCsv | Import-InflectionInfos
       $inflection = @'
 eka card,masc sg,,masc pl,
 nom,eko,masc nom sg,eke,masc nom irreg
@@ -154,7 +158,7 @@ acc,ekaṃ,1masc acc sg,eke,masc acc pl
     }
 
     It "Grammar does not have expected entries" {
-      $ii = 'eka adj,A1:E3' | Read-IndexCsv | Import-InflectionInfos $Abbreviations
+      $ii = 'eka adj,A1:E3,?' | Read-IndexCsv | Import-InflectionInfos
       $inflection = @'
 eka adj,masc sg,,masc pl,
 nom,eko,masc sg,eke,masc nom pl
@@ -169,7 +173,7 @@ acc,ekaṃ,masc acc sg,eke,masc acc pl dual
     }
 
     It "Inflection does not have non pāli characters" {
-      $ii = 'eka adj,A1:E3' | Read-IndexCsv | Import-InflectionInfos $Abbreviations
+      $ii = 'eka adj,A1:E3,?' | Read-IndexCsv | Import-InflectionInfos
       $inflection = @'
 eka adj,masc sg,,masc pl,
 nom,ek7o,masc nom sg,eke,masc nom pl
@@ -184,8 +188,7 @@ acc,ekaṃ,masc acc sg,~eke,masc acc pl
     }
 
     It "Expand active verb category" {
-      $ii = @{ Id = 1; Name = "ati pr"; Pos = "pr"; SRow = 0; SCol = "A"; ERow = 4; ECol = "H" }
-      $ii = 'ati pr,A1:I5' | Read-IndexCsv | Import-InflectionInfos $Abbreviations
+      $ii = 'ati pr,A1:I5,?' | Read-IndexCsv $Abbreviations | Import-InflectionInfos
       $inflection = @"
 ati pr,active,,,,reflexive,,,
 ,sg,,pl,,sg,,pl,
@@ -194,7 +197,7 @@ pr 2nd,asi,pr 2nd sg,atha,pr 2nd pl,ase,reflx pr 2nd sg,avhe,reflx pr 2nd pl
 "@ | Read-InflectionsCsv
 
       $i = $ii | Import-Inflection $inflection $Abbreviations
-      $i.info | InflectionInfo2String | Should -BeExactly "1, ati pr, True, 4, 2, 0, A, 4, I"
+      $i.info | InflectionInfo2String | Should -BeExactly "1, ati pr, verb, 4, 2, 0, A, 4, I"
       $i.entries.Count | Should -Be 8
 
       $i.entries."02x01-pr 3rd sg".grammar | Should -BeExactly @("act", "pr", "3rd", "sg")
