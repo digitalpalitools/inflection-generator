@@ -46,11 +46,6 @@ jobs:
           cat ./build/inflections.sql | ./bin/linux/sqlite3
         continue-on-error: false
 
-      - name: inflections - .db -> .zip
-        uses: montudor/action-zip@v0.1.1
-        with:
-          args: zip -9 -j ./build/inflections.zip ./build/inflections.db
-
       - name: stems - .csv -> .sql
         run: |
           ./scripts/Generate-StemsSql.ps1
@@ -60,7 +55,13 @@ jobs:
       - name: stems - .sql -> .db
         run: |
           cat ./build/stems.sql | ./bin/linux/sqlite3
+          ./bin/linux/sqlite3.exe ./build/stems.db '.dump _stems' | ./bin/linux/sqlite3.exe ./build/inflections.db
         continue-on-error: false
+
+      - name: inflections - .db -> .zip
+        uses: montudor/action-zip@v0.1.1
+        with:
+          args: zip -9 -j ./build/inflections.zip ./build/inflections.db
 
       - name: stems - .db -> .zip
         uses: montudor/action-zip@v0.1.1
