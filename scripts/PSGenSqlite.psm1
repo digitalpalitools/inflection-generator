@@ -85,17 +85,17 @@ function Read-IndexCsv {
   )
 
   Process {
-    ConvertFrom-Csv $Csv -Header @("name", "bounds", "exampleinfo")
+    ConvertFrom-Csv $Csv
     | ForEach-Object {
-      $name = $_.name | TrimWithNull
+      $name = $_."inflection name" | TrimWithNull
       @{
         name = $name
         inflectionclass = $name | Get-InflectionClass $Abbreviations
-        bounds = $_.bounds | TrimWithNull
-        exampleinfo = $_.exampleinfo | TrimWithNull
+        bounds = $_."cell range" | TrimWithNull
+        like = $_.like | TrimWithNull
       }
     }
-    | Where-Object { $_.name -or $_.bounds -or $_.exampleinfo }
+    | Where-Object { $_.name -or $_.bounds }
   }
 }
 
@@ -170,13 +170,13 @@ function Import-InflectionInfos {
   Process {
     $id++
 
-    if ((-not $Index.name) -or (-not $Index.bounds) -or (-not $Index.exampleinfo)) {
-      "Index row $id must have name, bounds and example info." | New-Error
+    if ((-not $Index.name) -or (-not $Index.bounds)) {
+      "Index row $id must have 'inflection name' and 'cell range'." | New-Error
       return
     }
 
     if (-not ($Index.bounds -match '^([A-Z]+)([0-9]+):([A-Z]+)([0-9]+)$')) {
-      "Index row $id has invalid bounds." | New-Error
+      "Index row $id has invalid 'cell range'." | New-Error
       return
     }
 

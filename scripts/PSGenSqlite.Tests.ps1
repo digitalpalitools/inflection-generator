@@ -45,6 +45,7 @@ Describe "GenSqlite Tests" {
   Context "Import-InflectionIndices" {
     It "Basic test" {
       $index = @'
+inflection name,cell range,like
 a adj,A3:M12,ex1
 z pron dual,A14:M23,ex1
 in adj,A25:M3 4,ex1
@@ -62,20 +63,20 @@ a adj,A3:M12
       $indices.Length | Should -Be 10
       $indices[0] | InflectionInfo2String | Should -BeExactly "1, a adj, , 3, 1, 2, A, 11, M"
       $indices[1] | InflectionInfo2String | Should -BeExactly "2, z pron dual, prondual, 3, 1, 13, A, 22, M"
-      $indices[2].error | Should -BeExactly "Index row 3 has invalid bounds."
+      $indices[2].error | Should -BeExactly "Index row 3 has invalid 'cell range'."
       $indices[3] | InflectionInfo2String | Should -BeExactly "4, atthu imp, verb, 4, 2, 135, AZ, 136, BB"
-      $indices[4].error | Should -BeExactly "Index row 5 has invalid bounds."
+      $indices[4].error | Should -BeExactly "Index row 5 has invalid 'cell range'."
       $indices[5].error | Should -BeExactly "Inflection 'a pron' must have even number of columns (grammar and inflection)."
       $indices[6].error | Should -BeExactly "Inflection 'abc pron' location must have start row and col less than end row and col."
       $indices[7].error | Should -BeExactly "Inflection 'xxx card' location must have start row and col less than end row and col."
-      $indices[8].error | Should -BeExactly "Index row 9 must have name, bounds and example info."
-      $indices[9].error | Should -BeExactly "Index row 10 must have name, bounds and example info."
+      $indices[8].error | Should -BeExactly "Index row 9 must have 'inflection name' and 'cell range'."
+      $indices[9] | InflectionInfo2String | Should -BeExactly "10, a adj, , 3, 1, 2, A, 11, M"
     }
   }
 
   Context "Import-Inflection" {
     It "Basic test" {
-      $ii = 'eka card,Y2:AC5,ex1' | Read-IndexCsv | Import-InflectionInfos
+      $ii = "inflection name,cell range,like`neka card,Y2:AC5,ex1" | Read-IndexCsv | Import-InflectionInfos
       $inflection = @'
 ,,,,,,,,,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,,,eka card,masc sg,,masc pl,
@@ -110,7 +111,7 @@ a adj,A3:M12
     }
 
     It "Error if not found at index" {
-      $ii = 'x adx,B1:D4,exx1' | Read-IndexCsv | Import-InflectionInfos
+      $ii = "inflection name,cell range,like`nx adx,B1:D4,exx1" | Read-IndexCsv | Import-InflectionInfos
       $inflection = @"
 ,
 ,x adx
@@ -130,7 +131,7 @@ a adj,A3:M12
     }
 
     It "Grammar has 1 error" {
-      $ii = 'eka card,A1:E3,?' | Read-IndexCsv | Import-InflectionInfos
+      $ii = "inflection name,cell range,like`neka card,A1:E3,?" | Read-IndexCsv | Import-InflectionInfos
       $inflection = @'
 eka card,masc sg,,masc pl,
 nom,eko,masc nom sg,eke,masc nom plx
@@ -143,7 +144,7 @@ acc,ekaṃ,masc acc sg,eke,masc acc pl
     }
 
     It "Grammar has multiple errors" {
-      $ii = 'eka card,A1:E3,?' | Read-IndexCsv | Import-InflectionInfos
+      $ii = "inflection name,cell range,like`neka card,A1:E3,?" | Read-IndexCsv | Import-InflectionInfos
       $inflection = @'
 eka card,masc sg,,masc pl,
 nom,eko,masc nom sg,eke,masc nom irreg
@@ -158,7 +159,7 @@ acc,ekaṃ,1masc acc sg,eke,masc acc pl
     }
 
     It "Grammar does not have expected entries" {
-      $ii = 'eka adj,A1:E3,?' | Read-IndexCsv | Import-InflectionInfos
+      $ii = "inflection name,cell range,like`neka adj,A1:E3,?" | Read-IndexCsv | Import-InflectionInfos
       $inflection = @'
 eka adj,masc sg,,masc pl,
 nom,eko,masc sg,eke,masc nom pl
@@ -173,7 +174,7 @@ acc,ekaṃ,masc acc sg,eke,masc acc pl dual
     }
 
     It "Inflection does not have non pāli characters" {
-      $ii = 'eka adj,A1:E3,?' | Read-IndexCsv | Import-InflectionInfos
+      $ii = "inflection name,cell range,like`neka adj,A1:E3,?" | Read-IndexCsv | Import-InflectionInfos
       $inflection = @'
 eka adj,masc sg,,masc pl,
 nom,ek7o,masc nom sg,eke,masc nom pl
@@ -188,7 +189,7 @@ acc,ekaṃ,masc acc sg,~eke,masc acc pl
     }
 
     It "Expand active verb category" {
-      $ii = 'ati pr,A1:I5,?' | Read-IndexCsv $Abbreviations | Import-InflectionInfos
+      $ii = "inflection name,cell range,like`nati pr,A1:I5,?" | Read-IndexCsv $Abbreviations | Import-InflectionInfos
       $inflection = @"
 ati pr,active,,,,reflexive,,,
 ,sg,,pl,,sg,,pl,
