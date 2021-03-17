@@ -3,6 +3,8 @@ name: Continuous Integration
 on:
   push:
     branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 jobs:
   powershell-tests:
@@ -69,11 +71,13 @@ jobs:
           args: zip -9 -j ./build/stems.zip ./build/stems.db
 
       - name: Azure Login
+        if: github.event_name != 'pull_request'
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_KSAPPLICATIONS_STORAGE }}
 
       - name: Deploy
+        if: github.event_name != 'pull_request'
         uses: azure/CLI@v1
         with:
           azcliversion: 2.0.72
@@ -81,6 +85,7 @@ jobs:
               az storage blob upload-batch --account-name ksapplications -d '$web\inflections' -s ./build
 
       - name: Azure Logout
+        if: github.event_name != 'pull_request'
         run: |
               az logout
 
@@ -91,7 +96,7 @@ jobs:
     steps:
       - uses: actions/setup-ruby@v1
       - name: Notify DPT on Discord
-        if: always()
+        if: github.event_name != 'pull_request'
         env:
           JOB_STATUS: ${{ job.status }}
           WEBHOOK_URL: ${{ secrets.DISCORD_DPT_DEPLOYMENT_NOTIFICATIONS_WEBHOOK_URL }}
