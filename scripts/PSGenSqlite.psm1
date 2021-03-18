@@ -128,16 +128,43 @@ function Read-AbbreviationsCsv {
 
   Process {
     $abbreviations = @{}
-
-    ConvertFrom-Csv $Csv -Header @("name", "description", "isgrammar", "isverb")
-    | Where-Object { $_.name -and $_.description }
+    ConvertFrom-Csv $Csv
+    | Where-Object { $_."en - Abbreviation" -and $_."en - Full form" }
     | ForEach-Object {
-      $name = $_.name | TrimWithNull
+      $name = $_."en - Abbreviation" | TrimWithNull
       $abbreviations.$name = @{
         name = $name
-        description = $_.description | TrimWithNull
-        isgrammar = ($_.isgrammar  | TrimWithNull) -ceq "gram"
-        isverb = ($_.isverb | TrimWithNull) -ceq "verb"
+        description = $_."en - Full form" | TrimWithNull
+        isgrammar = ($_."gram"  | TrimWithNull) -ceq "gram"
+        isverb = ($_."verb" | TrimWithNull) -ceq "verb"
+        name_bn = $_.'bn - Abbreviation'
+        description_bn = $_.'bn - Full form'
+        name_bo = $_.'bo - Abbreviation'
+        description_bo = $_.'bo - Full form'
+        name_gu = $_.'gu - Abbreviation'
+        description_gu = $_.'gu - Full form'
+        name_hi = $_.'hi - Abbreviation'
+        description_hi = $_.'hi - Full form'
+        name_km = $_.'km - Abbreviation'
+        description_km = $_.'km - Full form'
+        name_kn = $_.'kn - Abbreviation'
+        description_kn = $_.'kn - Full form'
+        name_lo = $_.'lo - Abbreviation'
+        description_lo = $_.'lo - Full form'
+        name_ml = $_.'ml - Abbreviation'
+        description_ml = $_.'ml - Full form'
+        name_my = $_.'my - Abbreviation'
+        description_my = $_.'my - Full form'
+        name_pa = $_.'pa - Abbreviation'
+        description_pa = $_.'pa - Full form'
+        name_ru = $_.'ru - Abbreviation'
+        description_ru = $_.'ru - Full form'
+        name_si = $_.'si - Abbreviation'
+        description_si = $_.'si - Full form'
+        name_te = $_.'te - Abbreviation'
+        description_te = $_.'te - Full form'
+        name_th = $_.'th - Abbreviation'
+        description_th = $_.'th - Full form'
       }
     }
 
