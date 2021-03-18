@@ -52,10 +52,10 @@ $tableName = "_version"
 
 $tableName = "_abbreviations"
 "-- $tableName" | Out-Sql
-"CREATE TABLE $tableName (name TEXT NOT NULL PRIMARY KEY, description TEXT NOT NULL, isgrammar INTEGER NOT NULL, isverb INTEGER NOT NULL, name_bn TEXT, name_bo TEXT, name_en TEXT, name_gu TEXT, name_hi TEXT, name_km TEXT, name_kn TEXT, name_lo TEXT, name_ml TEXT, name_my TEXT, name_pa TEXT, name_ru TEXT, name_si TEXT, name_te TEXT, name_th TEXT);" | Out-Sql
-"INSERT INTO $tableName (name, description, isgrammar, isverb, name_bn , name_bo , name_en , name_gu , name_hi , name_km , name_kn , name_lo , name_ml , name_my , name_pa , name_ru , name_si , name_te , name_th)" | Out-Sql
+"CREATE TABLE $tableName (name TEXT NOT NULL PRIMARY KEY, description TEXT NOT NULL, isgrammar INTEGER NOT NULL, isverb INTEGER NOT NULL, bn TEXT, bo TEXT, gu TEXT, hi TEXT, km TEXT, kn TEXT, lo TEXT, ml TEXT, my TEXT, pa TEXT, ru TEXT, si TEXT, te TEXT, th TEXT);" | Out-Sql
+"INSERT INTO $tableName (name, description, isgrammar, isverb, bn, bo, gu, hi, km, kn, lo, ml, my, pa, ru, si, te, th)" | Out-Sql
 "VALUES" | Out-Sql
-($Abbreviations.Keys | Sort-Object | ForEach-Object { "  ('$($Abbreviations.$_.name)', '$($Abbreviations.$_.description)', '$($Abbreviations.$_.isgrammar)', '$($Abbreviations.$_.isverb)', '$($Abbreviations.$_.name_bn)', '$($Abbreviations.$_.name_bo)', '$($Abbreviations.$_.name_en)', '$($Abbreviations.$_.name_gu)', '$($Abbreviations.$_.name_hi)', '$($Abbreviations.$_.name_km)', '$($Abbreviations.$_.name_kn)', '$($Abbreviations.$_.name_lo)', '$($Abbreviations.$_.name_ml)', '$($Abbreviations.$_.name_my)', '$($Abbreviations.$_.name_pa)', '$($Abbreviations.$_.name_ru)', '$($Abbreviations.$_.name_si)', '$($Abbreviations.$_.name_te)', '$($Abbreviations.$_.name_th)')" }) -join ",`n" | Out-Sql
+($Abbreviations.Keys | Sort-Object | ForEach-Object { "  ('$($Abbreviations.$_.name)', '$($Abbreviations.$_.description)', '$($Abbreviations.$_.isgrammar)', '$($Abbreviations.$_.isverb)', '$($Abbreviations.$_.bn)', '$($Abbreviations.$_.bo)', '$($Abbreviations.$_.gu)', '$($Abbreviations.$_.hi)', '$($Abbreviations.$_.km)', '$($Abbreviations.$_.kn)', '$($Abbreviations.$_.lo)', '$($Abbreviations.$_.ml)', '$($Abbreviations.$_.my)', '$($Abbreviations.$_.pa)', '$($Abbreviations.$_.ru)', '$($Abbreviations.$_.si)', '$($Abbreviations.$_.te)', '$($Abbreviations.$_.th)')" }) -join ",`n" | Out-Sql
 ";" | Out-Sql
 "" | Out-Sql
 

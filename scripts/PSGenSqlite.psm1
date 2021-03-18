@@ -130,29 +130,29 @@ function Read-AbbreviationsCsv {
     $abbreviations = @{}
 
     ConvertFrom-Csv $Csv
-    | Where-Object { $_.'en - Abbreviation' -and $_.'en - Full Form' }
+    | Where-Object { $_.'en' -and $_.'en long' }
     | ForEach-Object {
-      $name = $_.'en - Abbreviation' | TrimWithNull
+      $name = $_.'en' | TrimWithNull
       $abbreviations.$name = @{
         name = $name
-        description = $_.'en - Full Form' | TrimWithNull
-        isgrammar = ($_.isgrammar  | TrimWithNull) -ceq "gram"
-        isverb = ($_.isverb | TrimWithNull) -ceq "verb"
-        name_bn = $_.'bn - Abbreviation' | TrimWithNull
-        name_bo = $_.'bo - Abbreviation' | TrimWithNull
-        name_en = $_.'en - Abbreviation' | TrimWithNull
-        name_gu = $_.'gu - Abbreviation' | TrimWithNull
-        name_hi = $_.'hi - Abbreviation' | TrimWithNull
-        name_km = $_.'km - Abbreviation' | TrimWithNull
-        name_kn = $_.'kn - Abbreviation' | TrimWithNull
-        name_lo = $_.'lo - Abbreviation' | TrimWithNull
-        name_ml = $_.'ml - Abbreviation' | TrimWithNull
-        name_my = $_.'my - Abbreviation' | TrimWithNull
-        name_pa = $_.'pa - Abbreviation' | TrimWithNull
-        name_ru = $_.'ru - Abbreviation' | TrimWithNull
-        name_si = $_.'si - Abbreviation' | TrimWithNull
-        name_te = $_.'te - Abbreviation' | TrimWithNull
-        name_th = $_.'th - Abbreviation' | TrimWithNull
+        description = $_.'en long' | TrimWithNull
+        isgrammar = ($_.'gram'  | TrimWithNull) -ceq "gram"
+        isverb = ($_.'verb' | TrimWithNull) -ceq "verb"
+        bn = $_.'bn' | TrimWithNull
+        bo = $_.'bo' | TrimWithNull
+        en = $_.'en' | TrimWithNull
+        gu = $_.'gu' | TrimWithNull
+        hi = $_.'hi' | TrimWithNull
+        km = $_.'km' | TrimWithNull
+        kn = $_.'kn' | TrimWithNull
+        lo = $_.'lo' | TrimWithNull
+        ml = $_.'ml' | TrimWithNull
+        my = $_.'my' | TrimWithNull
+        pa = $_.'pa' | TrimWithNull
+        ru = $_.'ru' | TrimWithNull
+        si = $_.'si' | TrimWithNull
+        te = $_.'te' | TrimWithNull
+        th = $_.'th' | TrimWithNull
       }
     }
 
