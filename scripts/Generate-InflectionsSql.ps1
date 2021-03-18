@@ -52,7 +52,7 @@ $tableName = "_version"
 
 $tableName = "_abbreviations"
 "-- $tableName" | Out-Sql
-"CREATE TABLE $tableName (name TEXT NOT NULL PRIMARY KEY, description TEXT NOT NULL, isgrammar INTEGER NOT NULL, isverb INTEGER NOT NULL);" | Out-Sql
+"CREATE TABLE $tableName (name TEXT NOT NULL PRIMARY KEY, description TEXT NOT NULL, isgrammar INTEGER NOT NULL, isverb INTEGER NOT NULL, bn TEXT, bo TEXT, en TEXT, gu TEXT, hi TEXT, km TEXT, kn TEXT, lo TEXT, ml TEXT, my TEXT, pa TEXT, ru TEXT, si TEXT, te TEXT, th TEXT);" | Out-Sql
 "INSERT INTO $tableName (name, description, isgrammar, isverb)" | Out-Sql
 "VALUES" | Out-Sql
 ($Abbreviations.Keys | Sort-Object | ForEach-Object { "  ('$($Abbreviations.$_.name)', '$($Abbreviations.$_.description)', '$($Abbreviations.$_.isgrammar)', '$($Abbreviations.$_.isverb)')" }) -join ",`n" | Out-Sql
