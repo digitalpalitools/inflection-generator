@@ -129,15 +129,30 @@ function Read-AbbreviationsCsv {
   Process {
     $abbreviations = @{}
 
-    ConvertFrom-Csv $Csv -Header @("name", "description", "isgrammar", "isverb")
-    | Where-Object { $_.name -and $_.description }
+    ConvertFrom-Csv $Csv
+    | Where-Object { $_.'en' -and $_.'en long' }
     | ForEach-Object {
-      $name = $_.name | TrimWithNull
+      $name = $_.'en' | TrimWithNull
       $abbreviations.$name = @{
         name = $name
-        description = $_.description | TrimWithNull
-        isgrammar = ($_.isgrammar  | TrimWithNull) -ceq "gram"
-        isverb = ($_.isverb | TrimWithNull) -ceq "verb"
+        description = $_.'en long' | TrimWithNull
+        isgrammar = ($_.'gram'  | TrimWithNull) -ceq "gram"
+        isverb = ($_.'verb' | TrimWithNull) -ceq "verb"
+        bn = $_.'bn' | TrimWithNull
+        bo = $_.'bo' | TrimWithNull
+        en = $_.'en' | TrimWithNull
+        gu = $_.'gu' | TrimWithNull
+        hi = $_.'hi' | TrimWithNull
+        km = $_.'km' | TrimWithNull
+        kn = $_.'kn' | TrimWithNull
+        lo = $_.'lo' | TrimWithNull
+        ml = $_.'ml' | TrimWithNull
+        my = $_.'my' | TrimWithNull
+        pa = $_.'pa' | TrimWithNull
+        ru = $_.'ru' | TrimWithNull
+        si = $_.'si' | TrimWithNull
+        te = $_.'te' | TrimWithNull
+        th = $_.'th' | TrimWithNull
       }
     }
 

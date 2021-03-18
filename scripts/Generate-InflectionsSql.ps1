@@ -52,10 +52,10 @@ $tableName = "_version"
 
 $tableName = "_abbreviations"
 "-- $tableName" | Out-Sql
-"CREATE TABLE $tableName (name TEXT NOT NULL PRIMARY KEY, description TEXT NOT NULL, isgrammar INTEGER NOT NULL, isverb INTEGER NOT NULL);" | Out-Sql
-"INSERT INTO $tableName (name, description, isgrammar, isverb)" | Out-Sql
+"CREATE TABLE $tableName (name TEXT NOT NULL PRIMARY KEY, description TEXT NOT NULL, isgrammar INTEGER NOT NULL, isverb INTEGER NOT NULL, bn TEXT, bo TEXT, gu TEXT, hi TEXT, km TEXT, kn TEXT, lo TEXT, ml TEXT, my TEXT, pa TEXT, ru TEXT, si TEXT, te TEXT, th TEXT);" | Out-Sql
+"INSERT INTO $tableName (name, description, isgrammar, isverb, bn, bo, gu, hi, km, kn, lo, ml, my, pa, ru, si, te, th)" | Out-Sql
 "VALUES" | Out-Sql
-($Abbreviations.Keys | Sort-Object | ForEach-Object { "  ('$($Abbreviations.$_.name)', '$($Abbreviations.$_.description)', '$($Abbreviations.$_.isgrammar)', '$($Abbreviations.$_.isverb)')" }) -join ",`n" | Out-Sql
+($Abbreviations.Keys | Sort-Object | ForEach-Object { "  ('$($Abbreviations.$_.name)', '$($Abbreviations.$_.description)', '$($Abbreviations.$_.isgrammar)', '$($Abbreviations.$_.isverb)', '$($Abbreviations.$_.bn)', '$($Abbreviations.$_.bo)', '$($Abbreviations.$_.gu)', '$($Abbreviations.$_.hi)', '$($Abbreviations.$_.km)', '$($Abbreviations.$_.kn)', '$($Abbreviations.$_.lo)', '$($Abbreviations.$_.ml)', '$($Abbreviations.$_.my)', '$($Abbreviations.$_.pa)', '$($Abbreviations.$_.ru)', '$($Abbreviations.$_.si)', '$($Abbreviations.$_.te)', '$($Abbreviations.$_.th)')" }) -join ",`n" | Out-Sql
 ";" | Out-Sql
 "" | Out-Sql
 
