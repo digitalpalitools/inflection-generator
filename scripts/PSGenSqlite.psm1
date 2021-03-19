@@ -130,29 +130,31 @@ function Read-AbbreviationsCsv {
     $abbreviations = @{}
 
     ConvertFrom-Csv $Csv
-    | Where-Object { $_.'en' -and $_.'en long' }
+    | Where-Object { $_.name -and $_.description }
     | ForEach-Object {
-      $name = $_.'en' | TrimWithNull
+      $name = $_.name | TrimWithNull
       $abbreviations.$name = @{
         name = $name
-        description = $_.'en long' | TrimWithNull
-        isgrammar = ($_.'gram'  | TrimWithNull) -ceq "gram"
-        isverb = ($_.'verb' | TrimWithNull) -ceq "verb"
-        bn = $_.'bn' | TrimWithNull
-        bo = $_.'bo' | TrimWithNull
-        en = $_.'en' | TrimWithNull
-        gu = $_.'gu' | TrimWithNull
-        hi = $_.'hi' | TrimWithNull
-        km = $_.'km' | TrimWithNull
-        kn = $_.'kn' | TrimWithNull
-        lo = $_.'lo' | TrimWithNull
-        ml = $_.'ml' | TrimWithNull
-        my = $_.'my' | TrimWithNull
-        pa = $_.'pa' | TrimWithNull
-        ru = $_.'ru' | TrimWithNull
-        si = $_.'si' | TrimWithNull
-        te = $_.'te' | TrimWithNull
-        th = $_.'th' | TrimWithNull
+        description = $_.description | TrimWithNull
+        isgrammar = ($_.gram | TrimWithNull) -ceq "gram"
+        isverb = ($_.verb | TrimWithNull) -ceq "verb"
+        sinh = $_.sinh | TrimWithNull
+        deva = $_.deva | TrimWithNull
+        latn = $_.latn | TrimWithNull
+        thai = $_.thai | TrimWithNull
+        laoo = $_.laoo | TrimWithNull
+        mymr = $_.mymr | TrimWithNull
+        khmr = $_.khmr | TrimWithNull
+        beng = $_.beng | TrimWithNull
+        guru = $_.guru | TrimWithNull
+        gujr = $_.gujr | TrimWithNull
+        telu = $_.telu | TrimWithNull
+        knda = $_.knda | TrimWithNull
+        mlym = $_.mlym | TrimWithNull
+        lana = $_.lana | TrimWithNull
+        brah = $_.brah | TrimWithNull
+        tibt = $_.tibt | TrimWithNull
+        cyrl = $_.cyrl | TrimWithNull
       }
     }
 
