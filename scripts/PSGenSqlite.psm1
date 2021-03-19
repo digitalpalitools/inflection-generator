@@ -1,5 +1,7 @@
 $ArrayOf5EmptyStrings = @("", "", "", "", "")
 
+$SupportedScripts = @("sinh", "deva", "thai", "laoo", "mymr", "khmr", "beng", "guru", "gujr", "telu", "knda", "mlym", "lana", "brah", "tibt", "cyrl")
+
 function CreateInflectionCsvColumns {
   @(
     @("", ("A".."Z"))
@@ -138,23 +140,13 @@ function Read-AbbreviationsCsv {
         description = $_.description | TrimWithNull
         isgrammar = ($_.gram | TrimWithNull) -ceq "gram"
         isverb = ($_.verb | TrimWithNull) -ceq "verb"
-        sinh = $_.sinh | TrimWithNull
-        deva = $_.deva | TrimWithNull
-        latn = $_.latn | TrimWithNull
-        thai = $_.thai | TrimWithNull
-        laoo = $_.laoo | TrimWithNull
-        mymr = $_.mymr | TrimWithNull
-        khmr = $_.khmr | TrimWithNull
-        beng = $_.beng | TrimWithNull
-        guru = $_.guru | TrimWithNull
-        gujr = $_.gujr | TrimWithNull
-        telu = $_.telu | TrimWithNull
-        knda = $_.knda | TrimWithNull
-        mlym = $_.mlym | TrimWithNull
-        lana = $_.lana | TrimWithNull
-        brah = $_.brah | TrimWithNull
-        tibt = $_.tibt | TrimWithNull
-        cyrl = $_.cyrl | TrimWithNull
+      }
+
+      $rec = $_
+      $SupportedScripts | % {
+        $short = $rec.$_ | TrimWithNull
+        $long = $rec."$_ long" | TrimWithNull
+        $abbreviations.$name.$_ = $short ? $short : $long ? $long : $name
       }
     }
 
