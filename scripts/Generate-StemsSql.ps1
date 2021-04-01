@@ -14,6 +14,12 @@ $stems = Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8 | Read-StemsCsv
   #| Where-Object { $_.stem -ine "-" }
   #| Select-Object -Skip 0 -First 1000
 
+$missingAbbreviations = $stems | Group-Object -Property pos | Where-Object { -Not $abbreviations.ContainsKey($_.Name) }
+if ($missingAbbreviations) {
+  $missingAbbreviations | ForEach-Object { Write-Host -ForegroundColor Red "Error: " $_.Name "not found in abbreviations sheet." }
+  throw "Rows missing in abbreviations sheet"
+}
+
 $indexPatternMap = $index | Group-Object -Property name -AsHashTable
 $unknownPatterns =
   $stems
