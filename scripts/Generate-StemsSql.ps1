@@ -14,7 +14,8 @@ $stems = Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8 | Read-StemsCsv
   #| Where-Object { $_.stem -ine "-" }
   #| Select-Object -Skip 0 -First 1000
 
-$missingAbbreviations = $stems | Group-Object -Property pos | Where-Object { -Not $abbreviations.ContainsKey($_.Name) }
+$reqAbbrevs = @("nom","acc","instr","dat","abl","gen","loc","voc","in comps","masc","fem","nt","x","sg","pl","dual","act","reflx","pr","fut","aor","opt","imp","cond","imperf","perf","1st","2nd","3rd","irreg","gram","ind","abs","adj","adv","base","card","case","comp","cs","ger","idiom","inf","like","ordin","person","pp","prefix","pron","prp","ptp","root","sandhi","suffix","ve")
+$missingAbbreviations = $reqAbbrevs | Where-Object { -Not $abbreviations.ContainsKey($_) }
 if ($missingAbbreviations) {
   $missingAbbreviations | ForEach-Object { Write-Host -ForegroundColor Red "Error: " $_.Name "not found in abbreviations sheet." }
   throw "Rows missing in abbreviations sheet"
