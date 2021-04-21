@@ -23,8 +23,7 @@ if ($missingAbbreviations) {
 $indexPatternMap = $index | Group-Object -Property name -AsHashTable
 $unknownPatterns =
   $stems
-  | Where-Object { $_.stem -cne "-" }
-  | Where-Object { -not $indexPatternMap.ContainsKey($_.pattern) }
+  | Where-Object { $_.pattern -and (-not $indexPatternMap.ContainsKey($_.pattern)) }
 
 $unknownPatterns
 | ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_.stem) | $($_.pāli1) | $($_.pattern) " }
