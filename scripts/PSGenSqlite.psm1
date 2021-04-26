@@ -2,6 +2,8 @@ $ArrayOf5EmptyStrings = @("", "", "", "", "")
 
 $SupportedScripts = @("sinh", "deva", "thai", "laoo", "mymr", "khmr", "beng", "guru", "gujr", "telu", "knda", "mlym", "lana", "brah", "tibt", "cyrl")
 
+$ValidPaliWordMatcher = "^[a|ā|i|ī|u|ū|e|o|k|kh|g|gh|ṅ|c|ch|j|jh|ñ|ṭ|ṭh|ḍ|ḍh|ṇ|t|th|d|dh|n|p|ph|b|bh|m|y|r|l|v|s|h|ḷ|ṃ]+$"
+
 function CreateInflectionCsvColumns {
   @(
     @("", ("A".."Z"))
@@ -293,7 +295,7 @@ function Import-Inflection {
       $inflection.entries.Keys
       | ForEach-Object { $inflection.entries[$_].inflections }
       | Where-Object {
-        ($_ -notmatch "^[a|ā|i|ī|u|ū|e|o|k|kh|g|gh|ṅ|c|ch|j|jh|ñ|ṭ|ṭh|ḍ|ḍh|ṇ|t|th|d|dh|n|p|ph|b|bh|m|y|r|l|v|s|h|ḷ|ṃ]+$")
+        ($_ -notmatch $ValidPaliWordMatcher)
       }
       | ForEach-Object {
         "Inflection '$($inflection.info.name)':'$_' cannot have invalid characters." | New-Error
