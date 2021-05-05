@@ -72,7 +72,7 @@ Write-Host -ForegroundColor Green "... done!"
 # Inflected form patterns should be a pali1
 #
 Write-Host -ForegroundColor Green "Checking for inflected form patterns that are not pali1..."
-$pali1xStemMap = $stems | Group-Object -Property { [regex]::match($_.pāli1, '^(\D+)(\d*)$').Groups[1].Value.Trim() } -AsHashTable
+$pali1xStemMap = $stems | Group-Object -Property { $_.pāli1 -replace ' \d+$','' } -AsHashTable
 $unknownPatterns =
   $stems
   | Where-Object { $_.stem -eq "!" }
