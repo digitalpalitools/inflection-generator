@@ -13,12 +13,17 @@ $abbreviations = Get-Content -Raw "$ioRoot/abbreviations.csv" -Encoding utf8 | R
 $index = Get-Content -Raw "$ioRoot/index.csv" -Encoding utf8 | Read-IndexCsv $abbreviations
 $stems = Get-Content -Raw "$ioRoot/stems.csv" -Encoding utf8 | Read-StemsCsv | Sort-Object -Property Pāli1
 
+#
 # Missing abbreviations checks.
 #
 Write-Host -ForegroundColor Green "Checking for missing abbreviations..."
-$missingAbbreviations = $stems | Group-Object -Property pos | Where-Object { -Not $abbreviations.ContainsKey($_.Name) }
+$missingAbbreviations =
+  $stems
+  | Where-Object { -not $_.ismetadata }
+  | Group-Object -Property pos
+  | Where-Object { -not $abbreviations.ContainsKey($_.Name) }
 if ($missingAbbreviations) {
-  $missingAbbreviations | ForEach-Object { Write-Host -ForegroundColor Red "Error: " $_.Name "not found in abbreviations sheet." }
+  $missingAbbreviations | ForEach-Object { Write-Host -ForegroundColor Red "Error: '$($_.Name)' not found in abbreviations sheet." }
   throw "Rows missing in abbreviations sheet"
 }
 Write-Host -ForegroundColor Green "... done!"
@@ -54,9 +59,27 @@ Write-Host -ForegroundColor Green "... done!"
 #
 # Stem pattern that do not resolve to a table pointed to by index.
 #
-Write-Host -ForegroundColor Green "Checking for stem patterns that do not resolve to a table pointed to by index..."
+Write-Host -ForegroundColor Green "Checking for non-inflectd-form stem patterns that do not resolve to a table pointed to by index..."
 $indexPatternMap = $index | Group-Object -Property name -AsHashTable
-$unknownPatterns = $stems | Where-Object { $_.pattern -and (-not $indexPatternMap.ContainsKey($_.pattern)) }
+$unknownPatterns = $stems | Where-Object { $_.stem -ne "!" -and $_.pattern -and (-not $indexPatternMap.ContainsKey($_.pattern)) }
+if ($unknownPatterns) {
+  $unknownPatterns | ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_.stem) | $($_.pāli1) | $($_.pattern) " }
+  throw "Validation error. See above for more details."
+}
+Write-Host -ForegroundColor Green "... done!"
+
+#
+# Inflected form patterns should be a pali1
+#
+Write-Host -ForegroundColor Green "Checking for inflected form patterns that are not pali1..."
+$pali1xStemMap = $stems | Group-Object -Property { [regex]::match($_.pāli1, '^(\D+)(\d*)$').Groups[1].Value.Trim() } -AsHashTable
+$unknownPatterns =
+  $stems
+  | Where-Object { $_.stem -eq "!" }
+  | Where-Object {
+    $notInPali1 = @($_.pattern.split(" ") | Where-Object { $_ } | Where-Object { -not $pali1xStemMap.ContainsKey($_) })
+    $notInPali1.Length -ne 0
+  }
 if ($unknownPatterns) {
   $unknownPatterns | ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_.stem) | $($_.pāli1) | $($_.pattern) " }
   throw "Validation error. See above for more details."

@@ -117,10 +117,11 @@ function Read-StemsCsv {
         stem = $_.stem | TrimWithNull
         pattern = $_.pattern | TrimWithNull
         pos = $_.pos | TrimWithNull
+        ismetadata = ($_.metadata | TrimWithNull) -ieq "yes"
         definition = ($_."Meaning IN CONTEXT" ? $_."Meaning IN CONTEXT" : $_.Buddhadatta) -replace "'",""
       }
     }
-    | Where-Object { $_.pāli1 -and $_.stem }
+    | Where-Object { $_.pāli1 }
   }
 }
 

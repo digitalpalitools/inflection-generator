@@ -214,8 +214,8 @@ pr 2nd,asi,pr 2nd sg,atha,pr 2nd pl,ase,reflx pr 2nd sg,avhe,reflx pr 2nd pl
   Context "Read CSVs" {
     It "Read Stem CSV" {
       $stems = @'
-Pāli1,Stem,Pattern
-pali1,*,pat1
+Pāli1,Stem,Pattern,Metadata
+pali1,*,pat1,yes
 pali2 ,- ,pat2
 pali3_,s_3_,pat3_
 ,x,pat3
@@ -223,9 +223,10 @@ x, ,pat3
 '@
       | Read-StemsCsv
 
-      $stems.pāli1 | Should -BeExactly @("pali1", "pali2", "pali3_")
-      $stems.stem | Should -BeExactly @("*", "-", "s_3_")
-      $stems.pattern | Should -BeExactly @("pat1", "pat2", "pat3_")
+      $stems.pāli1 | Should -BeExactly @("pali1", "pali2", "pali3_", "x")
+      $stems.stem | Should -BeExactly @("*", "-", "s_3_", "")
+      $stems.pattern | Should -BeExactly @("pat1", "pat2", "pat3_", "pat3")
+      $stems.ismetadata | Should -BeExactly @($True, $False, $False, $False)
     }
   }
 }
