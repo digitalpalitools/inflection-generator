@@ -111,6 +111,98 @@ function Out-Sql {
   }
 }
 
+function Out-SqlForIrregularStem {
+  param (
+    $printStatus,
+    $pāli1,
+    $pattern
+  )
+
+  if ($printStatus) {
+    Write-Host -ForegroundColor DarkMagenta "[irregular]" -NoNewline
+  }
+
+  $entries = $inflectionInfoMap.$pattern.entries
+  $entries.Keys
+  | ForEach-Object {
+    $grammar = $entries.$_.grammar -join " "
+    $entries.$_.inflections
+    | ForEach-Object { "  ('$_', '$pāli1', '$grammar', '*')," }
+  }
+  | Out-Sql
+}
+
+function Out-SqlForIndeclinableStem {
+  param (
+    $printStatus,
+    $pāli1
+  )
+
+  if ($printStatus) {
+    Write-Host -ForegroundColor DarkYellow "[indeclinable]" -NoNewline
+  }
+
+  $word = $pāli1 -replace "[ ]*\d*$","" | TrimWithNull
+  "  ('$word', '$pāli1', '', 'ind')," | Out-Sql
+}
+
+function Out-SqlForDeclinableStem {
+  param (
+    $printStatus,
+    $pāli1,
+    $stem,
+    $pattern
+  )
+
+  if ($printStatus) {
+    Write-Host -ForegroundColor Blue "[declinable]" -NoNewline
+  }
+
+  $entries = $inflectionInfoMap.$pattern.entries
+  $entries.Keys
+  | ForEach-Object {
+    $grammar = $entries.$_.grammar -join " "
+    $entries.$_.inflections
+    | ForEach-Object { "  ('$stem$_', '$pāli1', '$grammar', '')," }
+  }
+  | Out-Sql
+}
+
+function Out-SqlForStem {
+  param (
+    [Parameter(ValueFromPipeline = $true)]
+    $StemRecord
+  )
+
+  Begin {
+    $count = 0
+  }
+
+  Process {
+    $pāli1 = $StemRecord.pāli1
+    $stem = $StemRecord.stem
+    $pattern = $StemRecord.pattern
+    $printStatus = $count % 1000 -eq 0
+    if ($printStatus) {
+      Write-Host -ForegroundColor Green "[$count] Writing sql '$pāli1' " -NoNewline
+    }
+
+    if ($stem -eq "*") {
+      Out-SqlForIrregularStem $printStatus $pāli1 $pattern
+    } elseif ($stem -eq "-") {
+      Out-SqlForIndeclinableStem $printStatus $pāli1
+    } else {
+      Out-SqlForDeclinableStem $printStatus $pāli1 $stem $pattern
+    }
+
+    if ($printStatus) {
+      Write-Host -ForegroundColor Green " ..."
+    }
+
+    $count++
+  }
+}
+
 $commit_id = $env:GITHUB_SHA ?? "0000000000"
 $run_number = $env:GITHUB_RUN_NUMBER ?? "0"
 $repository = $env:GITHUB_REPOSITORY ?? "dev"
@@ -130,10 +222,20 @@ $endRecordMarker = '0xdeadbeef'
 "CREATE TABLE _stems (pāli1 TEXT NOT NULL PRIMARY KEY, stem TEXT NOT NULL, pattern TEXT NOT NULL, pos TEXT NOT NULL, definition TEXT NOT NULL);" | Out-Sql
 "INSERT INTO _stems (pāli1, stem, pattern, pos, definition)" | Out-Sql
 "VALUES" | Out-Sql
-$stems | ForEach-Object { "  ('$($_.pāli1)', '$($_.stem)', '$($_.pattern)', '$($_.pos)', '$($_.definition)')," } | Out-Sql
+$stems | Where-Object { $_.stem -ne "!" } | ForEach-Object { "  ('$($_.pāli1)', '$($_.stem)', '$($_.pattern)', '$($_.pos)', '$($_.definition)')," } | Out-Sql
 "  ('$endRecordMarker', '', '', '', '')" | Out-Sql
 ";" | Out-Sql
 "DELETE FROM _stems WHERE pāli1 = '$endRecordMarker';" | Out-Sql
+"" | Out-Sql
+
+"-- all_words" | Out-Sql
+"CREATE TABLE all_words (pāli TEXT NOT NULL, pāli1 TEXT NOT NULL, grammar TEXT NOT NULL, type TEXT NOT NULL, FOREIGN KEY (pāli1) REFERENCES _stems (pāli1));" | Out-Sql
+"INSERT INTO all_words (pāli, pāli1, grammar, type)" | Out-Sql
+"VALUES" | Out-Sql
+$stems | Where-Object { $_.stem -ne "!" } | Out-SqlForStem
+"  ('$endRecordMarker', '$($stems[0].pāli1)', '', '')" | Out-Sql
+";" | Out-Sql
+"DELETE FROM all_words WHERE pāli = '$endRecordMarker';" | Out-Sql
 "" | Out-Sql
 
 "-- Save to db" | Out-Sql
