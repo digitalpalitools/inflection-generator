@@ -79,7 +79,7 @@ jobs:
         with:
           args: zip -9 -j ./build/stems.zip ./build/stems.db
 
-      - name: stems - .db -> .zip
+      - name: all_words - .db -> .zip
         uses: montudor/action-zip@v0.1.1
         with:
           args: zip -9 -j ./build/inflections_all_words.zip ./build/inflections_all_words.db
@@ -96,7 +96,7 @@ jobs:
         with:
           azcliversion: 2.0.72
           inlineScript: |
-              az storage blob upload-batch --account-name ksapplications -d '$web\inflections' -s ./build
+              az storage blob upload-batch --account-name ksapplications -d '$web/inflections' -s ./build
 
       - name: Azure Logout
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
