@@ -5,6 +5,8 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
+    branches: [ master ]
 
 jobs:
   powershell-tests:
@@ -60,6 +62,13 @@ jobs:
           ./bin/linux/sqlite3 ./build/stems.db '.dump _stems' | ./bin/linux/sqlite3 ./build/inflections.db
         continue-on-error: false
 
+      - name: generate all words
+        run: |
+          curl https://apps.kitamstudios.com/inflections/all_words_gen -o ./build/all_words_gen -v
+          chmod +x ./build/all_words_gen
+          cp ./build/inflections.db ./build/inflections_all_words.db
+          ./build/all_words_gen --inflection-db ./build/inflections_all_words.db
+
       - name: inflections - .db -> .zip
         uses: montudor/action-zip@v0.1.1
         with:
@@ -70,14 +79,19 @@ jobs:
         with:
           args: zip -9 -j ./build/stems.zip ./build/stems.db
 
+      - name: stems - .db -> .zip
+        uses: montudor/action-zip@v0.1.1
+        with:
+          args: zip -9 -j ./build/inflections_all_words.zip ./build/inflections_all_words.db
+
       - name: Azure Login
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS_KSAPPLICATIONS_STORAGE }}
 
       - name: Deploy
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: azure/CLI@v1
         with:
           azcliversion: 2.0.72
@@ -85,7 +99,7 @@ jobs:
               az storage blob upload-batch --account-name ksapplications -d '$web\inflections' -s ./build
 
       - name: Azure Logout
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         run: |
               az logout
 
@@ -96,7 +110,7 @@ jobs:
     steps:
       - uses: actions/setup-ruby@v1
       - name: Notify DPT on Discord
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         env:
           JOB_STATUS: ${{ job.status }}
           WEBHOOK_URL: ${{ secrets.DISCORD_DPT_DEPLOYMENT_NOTIFICATIONS_WEBHOOK_URL }}
