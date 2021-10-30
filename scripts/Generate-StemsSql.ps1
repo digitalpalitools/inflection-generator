@@ -60,7 +60,7 @@ Write-Host -ForegroundColor Green "... done!"
 # Stem pattern that do not resolve to a table pointed to by index.
 #
 Write-Host -ForegroundColor Green "Checking for non-inflectd-form stem patterns that do not resolve to a table pointed to by index..."
-$indexPatternMap = $index | Group-Object -Property name -AsHashTable
+$indexPatternMap = $index | Group-Object -Property name -AsHashTable -CaseSensitive
 $unknownPatterns = $stems | Where-Object { $_.stem -ne "!" -and $_.pattern -and (-not $indexPatternMap.ContainsKey($_.pattern)) }
 if ($unknownPatterns) {
   $unknownPatterns | ForEach-Object { Write-Host -ForegroundColor Red "Error: $($_.stem) | $($_.pāli1) | $($_.pattern) " }
@@ -72,7 +72,7 @@ Write-Host -ForegroundColor Green "... done!"
 # Inflected form patterns should be a pali1
 #
 Write-Host -ForegroundColor Green "Checking for inflected form patterns that are not pali1..."
-$pali1xStemMap = $stems | Group-Object -Property { $_.pāli1 -replace ' \d+$','' } -AsHashTable
+$pali1xStemMap = $stems | Group-Object -Property { $_.pāli1 -replace ' \d+$','' } -AsHashTable -CaseSensitive
 $unknownPatterns =
   $stems
   | Where-Object { $_.stem -eq "!" }
